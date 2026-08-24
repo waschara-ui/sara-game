@@ -1,0 +1,2991 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>เกาะสระวิเศษ — เกมคำในแม่ ก กา</title>
+<style>
+  :root{
+    --font:'Sarabun','Noto Sans Thai','Leelawadee UI','Tahoma',sans-serif;
+    --sky-top:#5FBFE0; --sky-bottom:#FFF6DE;
+    --ink:#15304C; --ink-soft:#3A5470;
+    --accent:#FF8A3D; --accent-dark:#D96A1F;
+    --success:#1E9E5C; --success-bg:#DFF6E8;
+    --soft-warn:#B85C5C; --soft-warn-bg:#FBE6E6;
+    --card:#FFFFFF; --card-alt:#FFF6DE;
+    --shadow:0 4px 14px rgba(21,48,76,.18);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    min-height:100vh;
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 65%);
+    display:flex;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;padding:16px;padding-bottom:32px}
+  h1,h2,h3,p{margin:0}
+  button{font-family:var(--font)}
+  .btn{
+    min-width:48px;min-height:48px;padding:12px 18px;border:none;border-radius:16px;
+    font-size:1rem;font-weight:700;cursor:pointer;touch-action:manipulation;
+    box-shadow:var(--shadow);color:#fff;background:var(--accent);
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+  .btn-secondary{background:#fff;color:var(--ink);border:2px solid var(--ink-soft)}
+  .btn-success{background:var(--success)}
+  .btn-block{width:100%}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .center{text-align:center}
+  .title-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:12px}
+  .app-title{font-size:1.4rem;font-weight:800}
+  .subtitle{color:var(--ink-soft);font-size:.9rem}
+  .pdpa-banner{background:#fff;border:2px dashed var(--ink-soft);border-radius:14px;padding:10px 12px;font-size:.82rem;color:var(--ink-soft);text-align:center}
+  .storage-warning{background:var(--soft-warn-bg);color:var(--soft-warn);border-radius:14px;padding:10px 12px;font-size:.85rem;text-align:center;font-weight:700}
+  input[type=text]{
+    width:100%;min-height:48px;border-radius:14px;border:2px solid #cfe0ea;padding:10px 14px;
+    font-size:1rem;font-family:var(--font);color:var(--ink);background:#fff;
+  }
+  input[type=text]:focus{outline:3px solid var(--accent);border-color:var(--accent)}
+  label{font-size:.85rem;color:var(--ink-soft);font-weight:700;margin-bottom:4px;display:block}
+  .field{margin-bottom:10px}
+  .profile-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--card-alt);border-radius:16px;padding:12px 14px;cursor:pointer;
+  }
+  .profile-item .meta{font-size:.78rem;color:var(--ink-soft)}
+  .error-text{color:var(--soft-warn);font-size:.82rem;font-weight:700;min-height:1.2em}
+
+  /* map screen */
+  .island-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .island-btn{
+    position:relative;border:none;border-radius:18px;padding:14px 10px 12px;background:var(--card);
+    box-shadow:var(--shadow);cursor:pointer;text-align:center;min-height:110px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  }
+  .island-btn[data-status="locked"]{opacity:.5;cursor:default}
+  .island-btn[data-status="passed"]{background:var(--success-bg)}
+  .island-icon{font-size:2rem}
+  .island-name{font-size:.78rem;font-weight:700;line-height:1.25}
+  .island-badge{position:absolute;top:6px;right:8px;font-size:1.1rem}
+
+  /* game screen */
+  .progress-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .progress-track{flex:1;height:14px;border-radius:10px;background:#e2eef5;overflow:hidden}
+  .progress-fill{height:100%;background:var(--accent);transition:width .35s ease}
+  #score-display{font-weight:800;color:var(--accent-dark);white-space:nowrap}
+  .stage{position:relative;min-height:380px;display:flex;flex-direction:column;gap:14px}
+  .prompt-box{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;text-align:center}
+  .prompt-emoji{font-size:3.4rem;line-height:1}
+  .prompt-word{font-size:2.2rem;font-weight:800;letter-spacing:1px}
+  .prompt-hint{color:var(--ink-soft);font-size:.9rem;margin-top:6px}
+  .speak-btn{
+    min-width:48px;min-height:48px;border-radius:50%;border:none;background:var(--card-alt);
+    box-shadow:var(--shadow);font-size:1.3rem;cursor:pointer;margin-top:8px;
+  }
+  .options-col{display:flex;flex-direction:column;gap:10px}
+  .option-btn{
+    min-height:56px;border-radius:16px;border:2px solid #cfe0ea;background:#fff;color:var(--ink);
+    font-size:1.05rem;font-weight:700;cursor:pointer;box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;
+  }
+  .option-btn:disabled{opacity:.55}
+  .option-btn.mini-speak{gap:10px}
+  .option-btn .mini-speak-icon{font-size:1.1rem}
+  .hint-area{min-height:34px;text-align:center;color:var(--accent-dark);font-weight:700;font-size:.9rem}
+  .hint-area.show{animation:floatUp .4s ease}
+  @keyframes floatUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  .shake{animation:shakeAnim .4s}
+  @keyframes shakeAnim{
+    10%,90%{transform:translateX(-4px)}20%,80%{transform:translateX(6px)}
+    30%,50%,70%{transform:translateX(-9px)}40%,60%{transform:translateX(9px)}
+  }
+  .bounce{animation:bounceAnim .6s}
+  @keyframes bounceAnim{
+    0%{transform:translateY(0)}30%{transform:translateY(-16px) rotate(-6deg)}
+    55%{transform:translateY(0) rotate(4deg)}75%{transform:translateY(-8px)}100%{transform:translateY(0)}
+  }
+  .sad-wiggle{animation:sadAnim .5s}
+  @keyframes sadAnim{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+
+  /* basket minigame */
+  .basket-row{display:flex;gap:10px;justify-content:center}
+  .basket{
+    flex:1;min-height:100px;border-radius:16px;border:3px dashed #9cc6da;background:#eef8fc;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    cursor:pointer;touch-action:manipulation;
+  }
+  .basket.drag-over{background:#d4f0e0;border-color:var(--success)}
+  .basket-glyph{font-size:1.5rem;font-weight:800}
+  .basket-name{font-size:.7rem;color:var(--ink-soft)}
+  .word-card-wrap{display:flex;justify-content:center;padding:10px 0}
+  .word-card{
+    min-width:140px;min-height:80px;border-radius:18px;background:var(--card);box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;
+    padding:10px 22px;touch-action:none;cursor:grab;user-select:none;position:relative;
+  }
+  .word-card:active{cursor:grabbing}
+  .basket-hint-text{text-align:center;color:var(--ink-soft);font-size:.8rem}
+
+  /* sort minigame */
+  .sort-options-row{display:flex;gap:10px}
+  .sort-options-row .option-btn{flex:1}
+
+  /* praise / score pop */
+  .praise-toast{
+    position:absolute;top:6px;left:50%;transform:translateX(-50%);
+    background:var(--success);color:#fff;font-weight:800;padding:6px 16px;border-radius:20px;
+    box-shadow:var(--shadow);animation:floatUp .4s ease;
+  }
+
+  /* confetti */
+  .confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:var(--radius)}
+  .confetti-piece{position:absolute;top:-10px;width:8px;height:14px;opacity:.9;animation:confettiFall 1.1s ease-in forwards}
+  @keyframes confettiFall{
+    0%{transform:translateY(0) rotate(0deg);opacity:1}
+    100%{transform:translateY(220px) rotate(340deg);opacity:0}
+  }
+
+  /* result screen */
+  .medal-emoji{font-size:4rem}
+  .score-big{font-size:2.6rem;font-weight:800;color:var(--accent-dark)}
+  .review-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .chip{background:var(--card-alt);border-radius:14px;padding:6px 12px;font-weight:700;font-size:.85rem}
+
+  .parrot-wrap{display:flex;justify-content:center}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+  /* modal overlay (PIN, confirm dialogs) */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(21,48,76,.55);display:flex;align-items:center;justify-content:center;
+    z-index:50;padding:16px;
+  }
+  .modal-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;max-width:340px;width:100%}
+  .modal-card h3{font-size:1.05rem;margin-bottom:10px}
+  .modal-card p{font-size:.88rem;color:var(--ink-soft)}
+  input[type=password]{
+    width:100%;min-height:48px;border-radius:14px;border:2px solid #cfe0ea;padding:10px 14px;
+    font-size:1.3rem;letter-spacing:6px;text-align:center;font-family:var(--font);color:var(--ink);background:#fff;
+  }
+  .teacher-trigger{background:none;border:none;cursor:pointer;font-size:2rem;padding:4px;border-radius:50%;touch-action:manipulation}
+
+  /* satisfaction smiley */
+  .smiley-row{display:flex;gap:14px;justify-content:center}
+  .smiley-btn{
+    min-width:80px;min-height:80px;border-radius:20px;border:2px solid #cfe0ea;background:#fff;
+    font-size:2.4rem;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .smiley-btn:active{transform:translateY(1px)}
+
+  /* summary / report */
+  .summary-compare{display:flex;gap:10px}
+  .summary-compare .col{flex:1;background:var(--card-alt);border-radius:14px;padding:12px;text-align:center}
+  .summary-compare .col .big{font-size:1.7rem;font-weight:800;color:var(--accent-dark)}
+  .summary-compare .col .lbl{font-size:.78rem;color:var(--ink-soft)}
+  table.summary-table{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.summary-table th,table.summary-table td{padding:6px 4px;text-align:left;border-bottom:1px solid #e2eef5}
+  table.summary-table th{color:var(--ink-soft);font-size:.75rem}
+  .table-scroll{overflow-x:auto}
+  .error-chip{background:var(--card-alt);border-radius:12px;padding:5px 10px;font-size:.8rem;font-weight:700}
+
+  /* group mode: wizard */
+  .wizard-progress-dots{display:flex;gap:8px;justify-content:center}
+  .wizard-progress-dots .dot{width:10px;height:10px;border-radius:50%;background:#cfe0ea}
+  .wizard-progress-dots .dot.active{background:var(--accent);width:22px;border-radius:6px}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .choice-btn{
+    min-height:56px;border-radius:16px;border:2px solid #cfe0ea;background:#fff;color:var(--ink);
+    font-family:var(--font);font-weight:700;font-size:.92rem;padding:10px;cursor:pointer;box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .choice-btn.is-selected{border-color:var(--accent);background:var(--card-alt);color:var(--accent-dark)}
+  .choice-btn:disabled{opacity:.45;cursor:not-allowed}
+  .wizard-nav{display:flex;gap:10px}
+  .player-name-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .player-avatar-dot{min-width:44px;min-height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+  .island-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .island-check-item{
+    min-height:52px;border-radius:14px;border:2px solid #cfe0ea;background:#fff;padding:8px 10px;
+    display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;font-weight:700;color:var(--ink);
+  }
+  .island-check-item input{width:22px;height:22px;flex-shrink:0}
+  .island-check-item.is-checked{border-color:var(--accent);background:var(--card-alt)}
+
+  /* group mode: game screen */
+  .group-player-badge{
+    display:inline-flex;align-items:center;gap:8px;background:var(--card-alt);border-radius:14px;
+    padding:8px 14px;font-weight:800;font-size:.95rem;
+  }
+  .group-player-badge .swatch{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+  .buzz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .buzz-btn{
+    min-width:64px;min-height:64px;border-radius:20px;border:none;color:#fff;font-weight:800;font-size:.85rem;
+    cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  }
+  .buzz-btn:disabled{opacity:.35;cursor:not-allowed}
+  .buzz-btn .emoji{font-size:1.6rem}
+  .buzz-countdown{text-align:center;font-size:1.6rem;font-weight:800;color:var(--soft-warn)}
+  .team-score-banner{display:flex;gap:10px}
+  .team-score-banner .team-col{flex:1;border-radius:14px;padding:10px;text-align:center;color:#fff;font-weight:800}
+  .team-score-banner .team-red{background:#E86A9C}
+  .team-score-banner .team-blue{background:#5FBFE0}
+
+  /* group mode: result */
+  .group-rank-row{display:flex;align-items:center;gap:10px;background:var(--card-alt);border-radius:14px;padding:10px 14px;margin-bottom:8px}
+  .group-rank-row .rank-num{font-weight:800;font-size:1.1rem;min-width:26px}
+  .group-rank-row .score{margin-left:auto;font-weight:800;color:var(--accent-dark)}
+
+  /* trace zone: menu */
+  .trace-vowel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .trace-vowel-btn{
+    min-width:48px;min-height:64px;border:none;border-radius:14px;background:var(--card);box-shadow:var(--shadow);
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px;
+  }
+  .trace-vowel-btn .trace-vowel-text{font-size:1.15rem;font-weight:800;color:var(--ink)}
+  .trace-vowel-btn .trace-vowel-stars{font-size:.7rem;letter-spacing:1px}
+
+  /* trace zone: write */
+  .trace-canvas-wrap{display:flex;justify-content:center;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px}
+  #trace-canvas{touch-action:none;width:100%;max-width:320px;height:auto;aspect-ratio:320/260;border-radius:12px;background:var(--card-alt);display:block}
+  .trace-stars{text-align:center;font-size:1.8rem;min-height:36px;letter-spacing:4px}
+  .trace-warning{text-align:center;font-weight:700;color:var(--soft-warn);background:var(--soft-warn-bg);border-radius:12px;padding:8px 12px}
+</style>
+</head>
+<body>
+<div id="app" data-testid="app-root"></div>
+<div id="modal-root"></div>
+<div id="a11y-live" aria-live="polite" class="sr-only"></div>
+
+<script>
+'use strict';
+
+/* ===================== SECTION 1: DATA ===================== */
+const ISLANDS = [
+  {
+    id: 1, island: "เกาะอาทิตย์", vowel: "อา", game: "basket",
+    words: [
+      { w: "ตา", e: "👁️", h: "อวัยวะไว้มองเห็น", v: "อา" },
+      { w: "ปลา", e: "🐟", h: "สัตว์น้ำ ว่ายน้ำเก่ง", v: "อา" },
+      { w: "หมา", e: "🐶", h: "สัตว์เลี้ยงเห่าได้", v: "อา" },
+      { w: "ขา", e: "🦵", h: "อวัยวะไว้เดินวิ่ง", v: "อา" },
+      { w: "นา", e: "🌾", h: "ที่ดินไว้ปลูกข้าว", v: "อา" },
+      { w: "ผ้า", e: "🧣", h: "เอาไว้ห่มหรือตัดเสื้อ", v: "อา" },
+      { w: "ป้า", e: "👵", h: "พี่สาวของพ่อหรือแม่", v: "อา" },
+      { w: "ยา", e: "💊", h: "กินแล้วหายป่วย", v: "อา" },
+      { w: "กา", e: "🐦", h: "นกสีดำ ร้อง \"กา ๆ\"", v: "อา" },
+      { w: "ฟ้า", e: "☁️", h: "สิ่งที่อยู่เหนือหัวเรา", v: "อา" },
+    ],
+    dis: ["ตาล", "ปลาย", "ขาว", "บ้าน", "หมาก"],
+  },
+  {
+    id: 2, island: "เกาะอีเกิ้ง", vowel: "อี", game: "vowel",
+    words: [
+      { w: "สี", e: "🎨", h: "ใช้ระบายภาพให้สวย", v: "อี" },
+      { w: "ปี", e: "📅", h: "ระยะเวลา 12 เดือน", v: "อี" },
+      { w: "มี", e: "🤲", h: "เป็นเจ้าของสิ่งของ", v: "อี" },
+      { w: "ดี", e: "👍", h: "ตรงข้ามกับไม่ดี", v: "อี" },
+      { w: "ตี", e: "👊", h: "ใช้มือหรือไม้ทำให้เจ็บ", v: "อี" },
+      { w: "พี่", e: "👦", h: "คนที่เกิดก่อนในบ้าน", v: "อี" },
+      { w: "หนี", e: "🏃", h: "วิ่งออกให้พ้นอันตราย", v: "อี" },
+      { w: "ปี่", e: "🎶", h: "เครื่องดนตรีไทยเป่าเสียงแหลม", v: "อี" },
+      { w: "ชี้", e: "☝️", h: "ใช้นิ้วบอกทิศทาง", v: "อี" },
+      { w: "หมี", e: "🐻", h: "สัตว์ตัวใหญ่ขนหนา ชอบน้ำผึ้ง", v: "อี" },
+    ],
+    dis: ["ปีน", "มีด", "ตีน", "หนีบ", "ปีก"],
+  },
+  {
+    id: 3, island: "เกาะอูฐทอง", vowel: "อู", game: "match",
+    words: [
+      { w: "ปู", e: "🦀", h: "สัตว์มีก้าม เดินด้านข้าง", v: "อู" },
+      { w: "หู", e: "👂", h: "อวัยวะไว้ฟังเสียง", v: "อู" },
+      { w: "งู", e: "🐍", h: "สัตว์เลื้อยคลานตัวยาว ไม่มีขา", v: "อู" },
+      { w: "ดู", e: "👀", h: "ใช้ตามอง", v: "อู" },
+      { w: "รู", e: "🕳️", h: "ช่องเล็ก ๆ ทะลุผ่านได้", v: "อู" },
+      { w: "ครู", e: "🧑‍🏫", h: "คนที่สอนหนังสือ", v: "อู" },
+      { w: "ตู้", e: "🗄️", h: "เก็บของ มีประตูปิดเปิด", v: "อู" },
+      { w: "หนู", e: "🐭", h: "สัตว์ตัวเล็กชอบแทะของ", v: "อู" },
+      { w: "ประตู", e: "🚪", h: "ช่องไว้เข้าออกบ้าน", v: "อู", m: true },
+      { w: "รู้", e: "🧠", h: "เข้าใจในสิ่งที่เรียน", v: "อู" },
+    ],
+    dis: ["ปูน", "รูป", "ครุฑ", "ดูด", "ตูม"],
+  },
+  {
+    id: 4, island: "เกาะออมทรัพย์", vowel: "ออ", game: "basket",
+    words: [
+      { w: "พ่อ", e: "👨", h: "ผู้ชายที่เป็นพ่อของเรา", v: "ออ" },
+      { w: "ขอ", e: "🙏", h: "พูดเพื่ออยากได้สิ่งของ", v: "ออ" },
+      { w: "ต่อ", e: "🐝", h: "แมลงมีเหล็กใน ต่อยเจ็บ", v: "ออ" },
+      { w: "หมอ", e: "🩺", h: "คนที่รักษาคนป่วย", v: "ออ" },
+      { w: "รอ", e: "⏳", h: "หยุดอยู่กับที่จนถึงเวลา", v: "ออ" },
+      { w: "ทอ", e: "🧵", h: "สานเส้นด้ายเป็นผืนผ้า", v: "ออ" },
+      { w: "ล้อ", e: "🛞", h: "ส่วนกลมของรถที่ใช้หมุน", v: "ออ" },
+      { w: "ปอ", e: "🌿", h: "ต้นไม้เอาเปลือกทำเชือก", v: "ออ" },
+      { w: "ห่อ", e: "🎁", h: "พันสิ่งของด้วยกระดาษ", v: "ออ" },
+      { w: "ก่อ", e: "🧱", h: "เรียงอิฐทีละก้อนเป็นกำแพง", v: "ออ" },
+    ],
+    dis: ["ขอบ", "รอบ", "หมอน", "ทอง", "ก่อน"],
+  },
+  {
+    id: 5, island: "เกาะมือมหัศจรรย์", vowel: "อือ/โอ", game: "sort",
+    words: [
+      { w: "มือ", e: "✋", h: "อวัยวะไว้จับสิ่งของ", v: "อือ" },
+      { w: "ถือ", e: "🤲", h: "ใช้มือจับสิ่งของไว้", v: "อือ" },
+      { w: "ชื่อ", e: "🏷️", h: "สิ่งที่ใช้เรียกแทนตัวเรา", v: "อือ" },
+      { w: "ซื้อ", e: "🛒", h: "จ่ายเงินเพื่อได้ของ", v: "อือ" },
+      { w: "สื่อ", e: "📰", h: "บอกข่าวสารให้คนรู้", v: "อือ" },
+      { w: "ดื้อ", e: "😤", h: "ไม่เชื่อฟังพ่อแม่", v: "อือ" },
+      { w: "โต", e: "📏", h: "มีขนาดใหญ่ขึ้น", v: "โอ" },
+      { w: "โบ", e: "👋", h: "ยกมือแกว่งทักทาย", v: "โอ" },
+      { w: "โซ่", e: "⛓️", h: "เส้นเหล็กต่อกันเป็นห่วง", v: "โอ" },
+      { w: "โพ", e: "🌳", h: "ต้นไม้ใหญ่ใบรูปหัวใจ", v: "โอ" },
+    ],
+    dis: ["มืด", "ชื่น", "โบก", "โกน", "ยืน"],
+  },
+  {
+    id: 6, island: "เกาะเอแอ", vowel: "เอ/แอ", game: "match",
+    words: [
+      { w: "เท", e: "🫗", h: "รินน้ำออกจากภาชนะ", v: "เอ" },
+      { w: "เจ", e: "🥬", h: "อาหารที่ไม่ใส่เนื้อสัตว์", v: "เอ" },
+      { w: "เซ", e: "🥴", h: "เอียงตัวเกือบล้ม", v: "เอ" },
+      { w: "เวลา", e: "⏰", h: "สิ่งบอกว่ากี่โมงแล้ว", v: "เอ", m: true },
+      { w: "เกเร", e: "😈", h: "ประพฤติตัวไม่ดี ไม่เชื่อฟัง", v: "เอ", m: true },
+      { w: "แพ", e: "🪵", h: "พาหนะลอยน้ำทำจากไม้", v: "แอ" },
+      { w: "แม่", e: "👩", h: "ผู้หญิงที่เป็นแม่ของเรา", v: "แอ" },
+      { w: "แต่", e: "🔀", h: "คำเชื่อมประโยคที่ขัดแย้งกัน", v: "แอ" },
+      { w: "แห", e: "🕸️", h: "อุปกรณ์จับปลาเป็นตาข่ายกลม", v: "แอ" },
+      { w: "แก่", e: "🧓", h: "อายุมาก ไม่ใช่คนหนุ่มสาว", v: "แอ" },
+    ],
+    dis: ["เพลง", "แขน", "แสง", "เก่ง", "แมว"],
+  },
+  {
+    id: 7, island: "เกาะหัวใจ", vowel: "อัว", game: "basket",
+    words: [
+      { w: "ตัว", e: "🧍", h: "ร่างกายทั้งหมดของคนหรือสัตว์", v: "อัว" },
+      { w: "หัว", e: "🤕", h: "ส่วนบนสุดของร่างกาย", v: "อัว" },
+      { w: "วัว", e: "🐮", h: "สัตว์เลี้ยงให้นม ร้อง \"มอ\"", v: "อัว" },
+      { w: "บัว", e: "🪷", h: "ดอกไม้ที่ขึ้นในน้ำ", v: "อัว" },
+      { w: "ครัว", e: "🍳", h: "ห้องไว้ทำกับข้าว", v: "อัว" },
+      { w: "รั้ว", e: "🚧", h: "สิ่งกั้นรอบบ้านหรือที่ดิน", v: "อัว" },
+      { w: "รั่ว", e: "💧", h: "มีน้ำไหลออกจากรูที่ไม่ควรมี", v: "อัว" },
+      { w: "มัว", e: "🌫️", h: "มองเห็นไม่ชัดเจน", v: "อัว" },
+      { w: "กลัว", e: "😨", h: "รู้สึกไม่กล้า ตัวสั่น", v: "อัว" },
+      { w: "ตั๋ว", e: "🎫", h: "กระดาษไว้ขึ้นรถหรือดูหนัง", v: "อัว" },
+    ],
+    dis: ["ดวง", "ป่วย", "สวย", "ควาย", "ห่วง"],
+  },
+  {
+    id: 8, island: "เกาะเรือใบ", vowel: "เอีย/เอือ", game: "vowel",
+    words: [
+      { w: "เสีย", e: "💔", h: "ของพังใช้การไม่ได้", v: "เอีย" },
+      { w: "เมีย", e: "👰", h: "ภรรยาของสามี", v: "เอีย" },
+      { w: "เตี้ย", e: "📏", h: "สูงน้อย ตรงข้ามกับสูง", v: "เอีย" },
+      { w: "เขี่ย", e: "👆", h: "ใช้นิ้วหรือไม้เขี่ยของออก", v: "เอีย" },
+      { w: "เปีย", e: "💇‍♀️", h: "ผมที่ถักเป็นเส้นสวยงาม", v: "เอีย" },
+      { w: "เสือ", e: "🐯", h: "สัตว์ลายทางดุร้าย", v: "เอือ" },
+      { w: "เรือ", e: "🛶", h: "พาหนะแล่นอยู่ในน้ำ", v: "เอือ" },
+      { w: "เสื้อ", e: "👕", h: "เครื่องแต่งกายสวมท่อนบน", v: "เอือ" },
+      { w: "เกลือ", e: "🧂", h: "เครื่องปรุงรสเค็ม", v: "เอือ" },
+      { w: "เหลือ", e: "➕", h: "มีของเกินจากที่ใช้ ยังไม่หมด", v: "เอือ" },
+    ],
+    dis: ["เตียง", "เขียน", "เดียว", "เชือก", "เลือก"],
+  },
+  {
+    id: 9, island: "เกาะเสียงสั้น", vowel: "ผสม", game: "sort",
+    words: [
+      { w: "กะทิ", e: "🥥", h: "น้ำคั้นจากมะพร้าว", v: "อะ", m: true },
+      { w: "มะลิ", e: "💮", h: "ดอกไม้สีขาวหอม", v: "อะ", m: true },
+      { w: "มะละกอ", e: "🍈", h: "ผลไม้เนื้อสีส้ม ทำส้มตำได้", v: "อะ", m: true },
+      { w: "ชะนี", e: "🐒", h: "ลิงไม่มีหาง โหนกิ่งไม้เก่ง", v: "อะ", m: true },
+      { w: "กะปิ", e: "🦐", h: "เครื่องปรุงจากกุ้งตัวเล็ก", v: "อะ", m: true },
+      { w: "ทะเล", e: "🌊", h: "แหล่งน้ำเค็มกว้างใหญ่", v: "อะ", m: true },
+      { w: "เตะ", e: "🦶", h: "ใช้เท้ากระทบสิ่งของ", v: "เอะ" },
+      { w: "โต๊ะ", e: "🍽️", h: "เฟอร์นิเจอร์มีขาไว้วางของ", v: "โอะ" },
+      { w: "เกาะ", e: "🏝️", h: "แผ่นดินมีน้ำล้อมรอบ", v: "เอาะ" },
+      { w: "จะ", e: "🔜", h: "บอกว่ากำลังจะทำในอนาคต", v: "อะ" },
+      { w: "แกะ", e: "🐑", h: "สัตว์ขนฟูสีขาว ให้ขนทำเสื้อ", v: "แอะ" },
+      { w: "แพะ", e: "🐐", h: "สัตว์มีเครา ร้อง \"แบ๊\"", v: "แอะ" },
+      { w: "เปี๊ยะ", e: "🥮", h: "ขนมไส้หวานแป้งกรอบ", v: "เอียะ" },
+    ],
+    dis: ["กัด", "มัด", "ทับ", "เต็ม", "กอง"],
+  },
+  {
+    id: 10, island: "เกาะสระเกิน", vowel: "อำ/ใอ/ไอ/เอา", game: "vowel",
+    words: [
+      { w: "ทำ", e: "🔨", h: "ลงมือปฏิบัติสิ่งใดสิ่งหนึ่ง", v: "อำ" },
+      { w: "นำ", e: "👉", h: "พาคนอื่นไปข้างหน้า", v: "อำ" },
+      { w: "ดำ", e: "⚫", h: "สีเข้มที่สุด ตรงข้ามขาว", v: "อำ" },
+      { w: "คำ", e: "💬", h: "หน่วยเล็กสุดของภาษาที่มีความหมาย", v: "อำ" },
+      { w: "ใจ", e: "❤️", h: "อวัยวะสูบฉีดเลือด กลางอก", v: "ใอ" },
+      { w: "ใหม่", e: "✨", h: "เพิ่งได้มา ยังไม่เคยใช้", v: "ใอ" },
+      { w: "ใบ", e: "🍃", h: "ส่วนของต้นไม้สังเคราะห์แสง", v: "ใอ" },
+      { w: "ไก่", e: "🐔", h: "สัตว์ปีกขันตอนเช้า", v: "ไอ" },
+      { w: "ไข่", e: "🥚", h: "สิ่งที่แม่ไก่ออกมา กลมรี", v: "ไอ" },
+      { w: "เสา", e: "🪵", h: "เสาไม้หรือปูนไว้ค้ำยันบ้าน", v: "เอา" },
+    ],
+    dis: ["ไทย", "ราว", "ดาว", "นาน", "หนาว"],
+  },
+];
+
+const VF = {
+  "อา": "–า", "อี": "–ี", "อู": "–ู", "ออ": "–อ", "อือ": "–ือ",
+  "โอ": "โ–", "เอ": "เ–", "แอ": "แ–",
+  "อัว": "–ัว", "เอีย": "เ–ีย", "เอือ": "เ–ือ",
+  "อะ": "–ะ", "เอะ": "เ–ะ", "โอะ": "โ–ะ", "เอาะ": "เ–าะ", "แอะ": "แ–ะ", "เอียะ": "เ–ียะ",
+  "อำ": "–ำ", "ใอ": "ใ–", "ไอ": "ไ–", "เอา": "เ–า",
+};
+
+const ISLAND_ICONS = { 1:"☀️", 2:"🦅", 3:"🐫", 4:"💰", 5:"✋", 6:"🔤", 7:"💗", 8:"⛵", 9:"🔉", 10:"🌟" };
+
+/* ===================== SECTION 2: CONSTANTS ===================== */
+const STORAGE_KEY = 'sara_game_v1';
+const SCORE = { FIRST:10, SECOND:7, THIRD_PLUS:5, COMBO_BONUS:5, COMBO_STREAK:3, CAP:100, PASS:70 };
+const MEDAL_THRESHOLD = { gold:90, silver:80, bronze:70 };
+const PRAISE_MESSAGES = ["เก่งมาก!", "ยอดเยี่ยม!", "สุดยอดไปเลย!", "ถูกต้องนะจ๊ะ!", "เจ๋งมาก!", "ทำได้ดีมาก!"];
+const TEST_TOTAL = 20; // จำนวนข้อของ pre-test/post-test
+const TEACHER_PIN = '2580'; // 🔴 ครูควรเปลี่ยนรหัสนี้ก่อนใช้งานจริง (แก้ค่าตรงนี้)
+const GROUP_PLAYER_THEMES = [
+  { color:'#FF8A3D', emoji:'🐯' }, { color:'#5FBFE0', emoji:'🐬' },
+  { color:'#1E9E5C', emoji:'🐸' }, { color:'#FFD35C', emoji:'🦁' },
+  { color:'#E86A9C', emoji:'🐼' }, { color:'#8B6FD6', emoji:'🐨' },
+];
+const GROUP_BUZZ_SECONDS = 10;
+const TRACE_VOWELS = [
+  { v:'อา', w:'ตา', e:'👁️' }, { v:'อี', w:'สี', e:'🎨' }, { v:'อู', w:'ปู', e:'🦀' },
+  { v:'ออ', w:'พ่อ', e:'👨' }, { v:'อือ', w:'มือ', e:'✋' }, { v:'โอ', w:'โต', e:'📏' },
+  { v:'เอ', w:'เท', e:'🫗' }, { v:'แอ', w:'แม่', e:'👩' }, { v:'อัว', w:'หัว', e:'🤕' },
+  { v:'เอีย', w:'เสีย', e:'💔' }, { v:'เอือ', w:'เสือ', e:'🐯' }, { v:'อะ', w:'จะ', e:'🔜' },
+  { v:'อำ', w:'ทำ', e:'🔨' }, { v:'ใอ', w:'ใบ', e:'🍃' }, { v:'ไอ', w:'ไก่', e:'🐔' }, { v:'เอา', w:'เสา', e:'🪵' },
+];
+const TRACE_CANVAS_W = 320, TRACE_CANVAS_H = 260;
+// ระยะยอมรับการลาก (px) — ผ่อนปรนสำหรับกล้ามเนื้อมัดเล็ก ป.1
+// ครูสามารถลดค่า T_TOL ลงได้ (เช่น 18-20) หากใช้กับ ป.2-3 เพื่อความเข้มงวดขึ้น
+const T_TOL = 30;
+const T_PEN = 26;
+
+/* ===================== SECTION 3: STATE ===================== */
+const state = {
+  currentScreen: null,
+  storageAvailable: true,
+  storageWarningShown: false,
+  speechAvailable: false,
+  profiles: {},
+  activeProfileKey: null,
+  draftProfile: { name:'', classRoom:'', studentNo:'' },
+  formError: '',
+  selectedIslandId: null,
+  game: null,
+  lastResult: null,
+  activeTimers: [],
+  test: null,
+  showSurveyNext: false,
+  summaryReturnTo: 'map',
+  lastTestResult: null,
+  teacherPinError: '',
+  teacherHoldTimer: null,
+  groupSessions: [],
+  group: null,
+  groupWizardStep: 1,
+  groupSetupDraft: null,
+  activeGroupSessionId: null,
+  groupResultReturnTo: 'profile',
+  traceIndex: 0,
+};
+let currentScreenName = null;
+
+/* ===================== SECTION 4: UTILS ===================== */
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function sampleN(arr, n){
+  const s = shuffle(arr);
+  return s.slice(0, Math.min(n, s.length));
+}
+function nowISO(){ return new Date().toISOString(); }
+function formatDuration(sec){
+  const s = Math.max(0, Math.round(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + (r < 10 ? '0' : '') + r;
+}
+function collectAllVowelNames(){
+  const set = new Set();
+  ISLANDS.forEach(function (isl) { isl.words.forEach(function (w) { set.add(w.v); }); });
+  return Array.from(set);
+}
+function getIslandById(id){
+  return ISLANDS.find(function (isl) { return isl.id === Number(id); });
+}
+
+/* ===================== SECTION 5: STORAGE ===================== */
+function isStorageAvailable(){
+  try {
+    const k = '__sara_test__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  } catch (e) { return false; }
+}
+function loadProfiles(){
+  if (!state.storageAvailable) return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && parsed.profiles) ? parsed.profiles : {};
+  } catch (e) {
+    showStorageWarning();
+    return {};
+  }
+}
+function saveProfiles(){
+  if (!state.storageAvailable) { showStorageWarning(); return; }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ profiles: state.profiles, groupSessions: state.groupSessions }));
+  } catch (e) {
+    state.storageAvailable = false;
+    showStorageWarning();
+  }
+}
+function loadGroupSessions(){
+  if (!state.storageAvailable) return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return (parsed && parsed.groupSessions) ? parsed.groupSessions : [];
+  } catch (e) {
+    showStorageWarning();
+    return [];
+  }
+}
+function showStorageWarning(){
+  state.storageWarningShown = true;
+  const el = document.querySelector('[data-testid="storage-warning-banner"]');
+  if (el) el.classList.remove('sr-only');
+}
+function defaultLevelState(){
+  return { passed:false, bestScore:0, lastScore:0, medal:null,
+           timesPlayed:0, lastDurationSec:0, bestDurationSec:0, totalTimeSec:0, wrongWords:[] };
+}
+function recordWrongWord(profile, word){
+  if (!profile || !word) return;
+  if (!profile.wrongWordCounts) profile.wrongWordCounts = {};
+  profile.wrongWordCounts[word] = (profile.wrongWordCounts[word] || 0) + 1;
+}
+function makeProfileKey(classRoom, studentNo, name){
+  return classRoom.trim() + '-' + studentNo.trim() + '-' + name.trim();
+}
+function exportCSV(profileKey){
+  try {
+    const p = state.profiles[profileKey];
+    if (!p) return;
+    const rows = [['เกาะ','สระ','คะแนนล่าสุด','คะแนนดีที่สุด','เหรียญ','จำนวนครั้งที่เล่น','ผ่านแล้ว']];
+    ISLANDS.forEach(function (isl) {
+      const lvl = (p.levels && p.levels[isl.id]) || defaultLevelState();
+      rows.push([isl.island, isl.vowel, lvl.lastScore, lvl.bestScore, lvl.medal || '-', lvl.timesPlayed, lvl.passed ? 'ผ่าน' : 'ยังไม่ผ่าน']);
+    });
+    const csv = "﻿" + rows.map(function (r) { return r.join(','); }).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = profileKey + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) { /* ห้ามให้แอปพัง */ }
+}
+
+/* ===================== SECTION 6: AUDIO ENGINE (Web Audio) ===================== */
+let audioCtx = null;
+function getAudioCtx(){
+  if (audioCtx) return audioCtx;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  catch (e) { audioCtx = null; }
+  return audioCtx;
+}
+function unlockAudioOnce(){
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+}
+function playTone(freq, startOffset, duration, type, gainPeak){
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    const t0 = ctx.currentTime + startOffset;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(gainPeak || 0.2, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.05);
+  } catch (e) {}
+}
+function playCorrectChime(){
+  playTone(523.25, 0.00, 0.18, 'sine', 0.22);
+  playTone(659.25, 0.12, 0.18, 'sine', 0.22);
+  playTone(783.99, 0.24, 0.32, 'sine', 0.24);
+}
+function playWrongTone(){
+  playTone(196.00, 0, 0.35, 'sine', 0.12);
+}
+
+/* ===================== SECTION 7: SPEECH ENGINE ===================== */
+let thaiVoice = null;
+function initSpeech(){
+  if (!('speechSynthesis' in window)) { state.speechAvailable = false; return; }
+  refreshVoices();
+  try {
+    window.speechSynthesis.addEventListener('voiceschanged', refreshVoices);
+  } catch (e) {}
+  registerTimer(setTimeout(refreshVoices, 500));
+  registerTimer(setTimeout(refreshVoices, 1500));
+}
+function refreshVoices(){
+  let voices = [];
+  try { voices = window.speechSynthesis.getVoices() || []; } catch (e) { voices = []; }
+  const found = voices.find(function (v) { return v.lang && v.lang.toLowerCase().indexOf('th') === 0; }) || null;
+  thaiVoice = found;
+  const changed = state.speechAvailable !== !!found;
+  state.speechAvailable = !!found;
+  if (changed) refreshSpeakButtonsVisibility();
+}
+function refreshSpeakButtonsVisibility(){
+  document.querySelectorAll('.speak-btn, .mini-speak-icon').forEach(function (el) {
+    el.style.display = state.speechAvailable ? '' : 'none';
+  });
+}
+function speakWord(text){
+  if (!state.speechAvailable || !thaiVoice) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.voice = thaiVoice;
+    utter.lang = 'th-TH';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  } catch (e) {}
+}
+
+/* ===================== SECTION 8: SCORING / COMBO ENGINE ===================== */
+function newLevelSession(levelId){
+  const level = getIslandById(levelId);
+  const questions = engines[level.game].buildQuestionSet(level);
+  return {
+    levelId: levelId, gameType: level.game, level: level,
+    questions: questions,
+    currentIndex: 0,
+    rawScore: 0,
+    comboCount: 0,
+    answerLocked: false,
+    selectedCardIndex: null,
+    dragStart: null,
+    wrongWords: [],
+    startTime: Date.now(),
+    endTime: null,
+    perQuestion: questions.map(function () { return { attempts: 0 }; }),
+  };
+}
+function currentDisplayScore(){
+  if (!state.game) return 0;
+  return Math.min(state.game.rawScore, SCORE.CAP);
+}
+function submitAnswer(isCorrect, meta){
+  const g = state.game;
+  if (!g || g.answerLocked) return;
+  const q = g.perQuestion[g.currentIndex];
+
+  if (isCorrect) {
+    g.answerLocked = true;
+    disableAllOptionButtons();
+    q.attempts += 1;
+    const pts = q.attempts === 1 ? SCORE.FIRST : (q.attempts === 2 ? SCORE.SECOND : SCORE.THIRD_PLUS);
+    g.rawScore += pts;
+    if (q.attempts === 1) {
+      g.comboCount += 1;
+      if (g.comboCount % SCORE.COMBO_STREAK === 0) g.rawScore += SCORE.COMBO_BONUS;
+    } else {
+      g.comboCount = 0;
+    }
+    playCorrectChime();
+    animateScoreCounter(currentDisplayScore());
+    bounceParrot('happy');
+    spawnConfetti(document.querySelector('.stage'));
+    showPraiseMessage();
+    const t = setTimeout(advanceQuestion, 1300);
+    registerTimer(t);
+  } else {
+    q.attempts += 1;
+    if (q.attempts === 1) g.comboCount = 0;
+    if (meta && meta.word && meta.word.w && g.wrongWords.indexOf(meta.word.w) === -1) {
+      g.wrongWords.push(meta.word.w);
+    }
+    playWrongTone();
+    shakeCurrentCard();
+    bounceParrot('sad');
+    showHint(meta && meta.word ? meta.word.h : '');
+  }
+}
+function advanceQuestion(){
+  const g = state.game;
+  if (!g) return;
+  g.answerLocked = false;
+  g.selectedCardIndex = null;
+  g.dragStart = null;
+  g.currentIndex += 1;
+  if (g.currentIndex >= g.questions.length) {
+    finishLevel();
+  } else {
+    renderQuestionArea();
+  }
+}
+function finishLevel(){
+  const g = state.game;
+  g.endTime = Date.now();
+  const capped = Math.min(g.rawScore, SCORE.CAP);
+  const passed = capped >= SCORE.PASS;
+  const durationSec = Math.round((g.endTime - g.startTime) / 1000);
+
+  const profile = state.profiles[state.activeProfileKey];
+  if (!profile.levels) profile.levels = {};
+  const lvl = profile.levels[g.levelId] || (profile.levels[g.levelId] = defaultLevelState());
+  lvl.passed = lvl.passed || passed;
+  lvl.bestScore = Math.max(lvl.bestScore || 0, capped);
+  lvl.lastScore = capped;
+  lvl.medal = medalForScore(lvl.bestScore);
+  lvl.timesPlayed = (lvl.timesPlayed || 0) + 1;
+  lvl.lastDurationSec = durationSec;
+  lvl.bestDurationSec = lvl.bestDurationSec ? Math.min(lvl.bestDurationSec, durationSec) : durationSec;
+  lvl.totalTimeSec = (lvl.totalTimeSec || 0) + durationSec;
+  const mergedWrong = (lvl.wrongWords || []).concat(g.wrongWords);
+  lvl.wrongWords = Array.from(new Set(mergedWrong)).slice(-15);
+  g.wrongWords.forEach(function (w) { recordWrongWord(profile, w); });
+  profile.lastPlayedAt = nowISO();
+
+  saveProfiles();
+  state.lastResult = {
+    levelId: g.levelId, score: capped, passed: passed,
+    medal: medalForScore(capped), durationSec: durationSec,
+    reviewWords: lvl.wrongWords,
+  };
+  state.game = null;
+  goToScreen('result');
+}
+function medalForScore(score){
+  if (score >= MEDAL_THRESHOLD.gold) return 'gold';
+  if (score >= MEDAL_THRESHOLD.silver) return 'silver';
+  if (score >= MEDAL_THRESHOLD.bronze) return 'bronze';
+  return null;
+}
+function computeIslandStatus(profile, islandId){
+  const lvl = profile.levels && profile.levels[islandId];
+  if (lvl && lvl.passed) return 'passed';
+  if (!profile.pretest) return 'locked';
+  if (islandId === 1) return 'unlocked';
+  const prev = profile.levels && profile.levels[islandId - 1];
+  return (prev && prev.passed) ? 'unlocked' : 'locked';
+}
+function allIslandsPassed(profile){
+  return ISLANDS.every(function (isl) { return computeIslandStatus(profile, isl.id) === 'passed'; });
+}
+
+/* ===================== SECTION 9: ROUTER ===================== */
+function registerTimer(id){ state.activeTimers.push(id); return id; }
+function clearAllTimers(){
+  state.activeTimers.forEach(function (id) {
+    clearInterval(id); clearTimeout(id);
+    try { cancelAnimationFrame(id); } catch (e) {}
+  });
+  state.activeTimers = [];
+}
+function cleanupGameScreen(){
+  if (state.game) {
+    state.game.answerLocked = false;
+    state.game.dragStart = null;
+  }
+}
+const routes = {
+  profile:  { render: renderProfileScreen,  cleanup: null },
+  map:      { render: renderMapScreen,      cleanup: null },
+  game:     { render: renderGameScreen,     cleanup: cleanupGameScreen },
+  result:   { render: renderResultScreen,   cleanup: null },
+  pretest:  { render: renderPretestScreen,  cleanup: cleanupTestScreen },
+  posttest: { render: renderPosttestScreen, cleanup: cleanupTestScreen },
+  survey:   { render: renderSurveyScreen,   cleanup: null },
+  summary:  { render: renderSummaryScreen,  cleanup: null },
+  teacher:  { render: renderTeacherScreen,  cleanup: null },
+  groupSetup:  { render: renderGroupSetupScreen, cleanup: null },
+  groupGame:   { render: renderGroupGameScreen,  cleanup: cleanupGroupGameScreen },
+  groupResult: { render: renderGroupResultScreen, cleanup: null },
+  trace:       { render: renderTraceMenuScreen,  cleanup: null },
+  traceWrite:  { render: renderTraceWriteScreen, cleanup: cleanupTraceWriteScreen },
+};
+function goToScreen(name, params){
+  if (currentScreenName && routes[currentScreenName].cleanup) routes[currentScreenName].cleanup();
+  clearAllTimers();
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  state.currentScreen = name;
+  currentScreenName = name;
+  routes[name].render(params || {});
+  window.scrollTo(0, 0);
+}
+
+/* ===================== SECTION 10: RENDER HELPERS ===================== */
+function renderPreservingInputs(root, buildHtmlFn, fieldIds){
+  const snapshot = {};
+  fieldIds.forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) snapshot[id] = el.value;
+  });
+  root.innerHTML = buildHtmlFn();
+  fieldIds.forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el && snapshot[id] !== undefined) el.value = snapshot[id];
+  });
+}
+function disableAllOptionButtons(){
+  document.querySelectorAll('.option-btn, .basket').forEach(function (el) { el.disabled = true; el.style.pointerEvents = 'none'; });
+}
+function showHint(text){
+  const el = document.querySelector('[data-testid="hint-area"]');
+  if (!el) return;
+  el.textContent = text ? '💡 ' + text : '';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+function shakeCurrentCard(){
+  const el = document.querySelector('.prompt-box') || document.querySelector('.word-card');
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+function bounceParrot(mood){
+  const el = document.getElementById('parrot-mascot');
+  if (!el) return;
+  el.innerHTML = parrotSVG(mood);
+  el.classList.remove('bounce', 'sad-wiggle');
+  void el.offsetWidth;
+  el.classList.add(mood === 'happy' ? 'bounce' : 'sad-wiggle');
+  const t = setTimeout(function () {
+    if (document.getElementById('parrot-mascot')) el.innerHTML = parrotSVG('idle');
+  }, 900);
+  registerTimer(t);
+}
+function showPraiseMessage(){
+  const stage = document.querySelector('.stage');
+  if (!stage) return;
+  const toast = document.createElement('div');
+  toast.className = 'praise-toast';
+  toast.textContent = PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
+  stage.appendChild(toast);
+  const t = setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 1200);
+  registerTimer(t);
+}
+function animateScoreCounter(target){
+  const el = document.querySelector('[data-testid="score-display"]');
+  if (!el) return;
+  const start = parseInt(el.textContent, 10) || 0;
+  const duration = 450;
+  const t0 = performance.now();
+  function step(now){
+    const p = Math.min((now - t0) / duration, 1);
+    el.textContent = Math.round(start + (target - start) * p);
+    if (p < 1) registerTimer(requestAnimationFrame(step));
+  }
+  registerTimer(requestAnimationFrame(step));
+}
+function spawnConfetti(container){
+  if (!container) return;
+  let layer = container.querySelector('.confetti-layer');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    container.appendChild(layer);
+  }
+  const colors = ['#FF8A3D', '#5FBFE0', '#1E9E5C', '#FFD35C', '#E86A9C'];
+  for (let i = 0; i < 16; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = (Math.random() * 100) + '%';
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = (Math.random() * 0.15) + 's';
+    piece.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+    piece.addEventListener('animationend', function () { if (piece.parentNode) piece.parentNode.removeChild(piece); });
+    layer.appendChild(piece);
+  }
+}
+
+/* ===================== SECTION 11: SVG COMPONENTS ===================== */
+function parrotSVG(mood){
+  const eye = mood === 'sad' ? '<path d="M40 38 q4 4 8 0" stroke="#15304C" stroke-width="2.4" fill="none" stroke-linecap="round"/>' :
+              '<circle cx="44" cy="38" r="3.4" fill="#15304C"/>';
+  const beakColor = '#FF8A3D';
+  return '' +
+    '<svg viewBox="0 0 90 90" width="72" height="72" role="img" aria-label="นกแก้วน้องสระ">' +
+      '<ellipse cx="45" cy="50" rx="26" ry="28" fill="#2FBF71"/>' +
+      '<ellipse cx="30" cy="55" rx="12" ry="18" fill="#1E9E5C"/>' +
+      '<circle cx="45" cy="34" r="16" fill="#3FD98A"/>' +
+      eye +
+      '<path d="M45 40 q10 2 12 8 q-8 3 -14 -1 Z" fill="' + beakColor + '"/>' +
+      '<path d="M45 20 q-2 -8 2 -12 q4 4 2 12 Z" fill="#FFD35C"/>' +
+    '</svg>';
+}
+function trophySVG(medal){
+  const colors = { gold:'#FFC93C', silver:'#C7D0D8', bronze:'#D08A4C' };
+  const c = colors[medal] || '#C7D0D8';
+  return '' +
+    '<svg viewBox="0 0 100 100" width="88" height="88" role="img" aria-label="ถ้วยรางวัล">' +
+      '<circle cx="50" cy="42" r="26" fill="' + c + '"/>' +
+      '<circle cx="50" cy="42" r="18" fill="#FFF6DE"/>' +
+      '<rect x="42" y="64" width="16" height="14" fill="' + c + '"/>' +
+      '<rect x="30" y="78" width="40" height="8" rx="3" fill="' + c + '"/>' +
+    '</svg>';
+}
+
+/* ===================== SECTION 12: SCREEN — PROFILE ===================== */
+function onDraftInput(field, value){ state.draftProfile[field] = value; }
+
+function buildProfileScreenHtml(){
+  const keys = Object.keys(state.profiles);
+  const listHtml = keys.length ? keys.map(function (key) {
+    const p = state.profiles[key];
+    const passedCount = ISLANDS.filter(function (isl) { return computeIslandStatus(p, isl.id) === 'passed'; }).length;
+    return '' +
+      '<div class="profile-item" data-testid="profile-item-' + escapeHtml(key) + '" data-key="' + escapeHtml(key) + '">' +
+        '<div>' +
+          '<div style="font-weight:800">🧒 ' + escapeHtml(p.displayName) + '</div>' +
+          '<div class="meta">' + escapeHtml(p.classRoom) + ' เลขที่ ' + escapeHtml(p.studentNo) + ' · ผ่านแล้ว ' + passedCount + '/10 เกาะ</div>' +
+        '</div>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-secondary" style="min-height:40px;padding:8px 12px;font-size:.8rem" data-action="export" data-testid="btn-export-csv">📄 CSV</button>' +
+          '<button class="btn" style="min-height:40px;padding:8px 14px;font-size:.85rem" data-action="play">▶️ เล่น</button>' +
+        '</div>' +
+      '</div>';
+  }).join('') : '<p class="subtitle center">ยังไม่มีผู้เล่น เพิ่มผู้เล่นใหม่ด้านล่างได้เลย</p>';
+
+  return '' +
+    '<div data-testid="screen-profile" class="stack">' +
+      '<div class="title-row"><button class="teacher-trigger" id="teacher-trigger" data-testid="teacher-trigger" aria-label="เกาะสระวิเศษ">🦜</button><div><div class="app-title">เกาะสระวิเศษ</div><div class="subtitle">เลือกผู้เล่น</div></div></div>' +
+      '<div class="pdpa-banner">🔒 ข้อมูลอยู่ในเครื่องนี้เท่านั้น กรุณาส่งออก CSV ทุกครั้งหลังใช้งาน</div>' +
+      '<div class="storage-warning sr-only" data-testid="storage-warning-banner">⚠️ ไม่สามารถบันทึกข้อมูลได้ในเบราว์เซอร์นี้ (เช่น โหมดส่วนตัว) เกมยังเล่นได้ปกติ แต่ผลจะหายเมื่อปิดหน้าเว็บ</div>' +
+      '<div class="stack" data-testid="profile-list">' + listHtml + '</div>' +
+      '<div class="card stack">' +
+        '<h3 style="font-size:1rem">➕ เพิ่มผู้เล่นใหม่</h3>' +
+        '<div class="field"><label for="input-name">ชื่อ</label><input type="text" id="input-name" data-testid="input-name" placeholder="เช่น สมชาย" value="' + escapeHtml(state.draftProfile.name) + '"></div>' +
+        '<div class="field"><label for="input-class">ชั้น/ห้อง</label><input type="text" id="input-class" data-testid="input-class" placeholder="เช่น ป.2/1" value="' + escapeHtml(state.draftProfile.classRoom) + '"></div>' +
+        '<div class="field"><label for="input-no">เลขที่</label><input type="text" id="input-no" data-testid="input-no" placeholder="เช่น 15" value="' + escapeHtml(state.draftProfile.studentNo) + '"></div>' +
+        '<p class="error-text" id="profile-form-error">' + escapeHtml(state.formError) + '</p>' +
+        '<button class="btn btn-block" data-testid="btn-create-profile" id="btn-create-profile">สร้างผู้เล่นใหม่</button>' +
+      '</div>' +
+      '<button class="btn btn-block btn-secondary" data-testid="btn-group-mode" id="btn-group-mode">👥 โหมดเล่นกลุ่ม</button>' +
+    '</div>';
+}
+
+function renderProfileScreen(){
+  const root = document.getElementById('app');
+  renderPreservingInputs(root, buildProfileScreenHtml, ['input-name', 'input-class', 'input-no']);
+  if (state.storageWarningShown) {
+    const el = document.querySelector('[data-testid="storage-warning-banner"]');
+    if (el) el.classList.remove('sr-only');
+  }
+  attachProfileScreenHandlers();
+}
+
+function attachProfileScreenHandlers(){
+  const nameEl = document.getElementById('input-name');
+  const classEl = document.getElementById('input-class');
+  const noEl = document.getElementById('input-no');
+  if (nameEl) nameEl.addEventListener('input', function (e) { onDraftInput('name', e.target.value); });
+  if (classEl) classEl.addEventListener('input', function (e) { onDraftInput('classRoom', e.target.value); });
+  if (noEl) noEl.addEventListener('input', function (e) { onDraftInput('studentNo', e.target.value); });
+
+  const createBtn = document.getElementById('btn-create-profile');
+  if (createBtn) createBtn.addEventListener('click', onCreateProfileClick);
+
+  const groupModeBtn = document.getElementById('btn-group-mode');
+  if (groupModeBtn) groupModeBtn.addEventListener('click', startGroupWizard);
+
+  const teacherTrigger = document.getElementById('teacher-trigger');
+  if (teacherTrigger) {
+    const startHold = function () {
+      cancelHold();
+      state.teacherHoldTimer = setTimeout(openTeacherPinModal, 3000);
+      registerTimer(state.teacherHoldTimer);
+    };
+    const cancelHold = function () {
+      if (state.teacherHoldTimer) { clearTimeout(state.teacherHoldTimer); state.teacherHoldTimer = null; }
+    };
+    teacherTrigger.addEventListener('pointerdown', startHold);
+    teacherTrigger.addEventListener('pointerup', cancelHold);
+    teacherTrigger.addEventListener('pointerleave', cancelHold);
+    teacherTrigger.addEventListener('pointercancel', cancelHold);
+  }
+
+  document.querySelectorAll('.profile-item').forEach(function (item) {
+    const key = item.getAttribute('data-key');
+    item.querySelector('[data-action="play"]').addEventListener('click', function () {
+      state.activeProfileKey = key;
+      const p = state.profiles[key];
+      goToScreen(p && p.pretest ? 'map' : 'pretest');
+    });
+    item.querySelector('[data-action="export"]').addEventListener('click', function (e) {
+      e.stopPropagation();
+      exportCSV(key);
+    });
+  });
+}
+
+function onCreateProfileClick(){
+  const name = (state.draftProfile.name || '').trim();
+  const classRoom = (state.draftProfile.classRoom || '').trim();
+  const studentNo = (state.draftProfile.studentNo || '').trim();
+  const errEl = document.getElementById('profile-form-error');
+
+  if (!name || !classRoom || !studentNo) {
+    if (errEl) errEl.textContent = 'กรุณากรอกข้อมูลให้ครบทั้ง 3 ช่องนะครับ';
+    return;
+  }
+  const key = makeProfileKey(classRoom, studentNo, name);
+  if (state.profiles[key]) {
+    if (errEl) errEl.textContent = 'มีผู้เล่นคนนี้อยู่แล้ว ลองเลือกจากรายชื่อด้านบนได้เลย';
+    return;
+  }
+  state.profiles[key] = {
+    displayName: name, classRoom: classRoom, studentNo: studentNo,
+    createdAt: nowISO(), lastPlayedAt: nowISO(), levels: {},
+    pretest: null, posttest: null, postAttempts: [], survey: null, wrongWordCounts: {},
+  };
+  saveProfiles();
+  state.draftProfile = { name:'', classRoom:'', studentNo:'' };
+  state.formError = '';
+  state.activeProfileKey = key;
+  goToScreen(state.profiles[key].pretest ? 'map' : 'pretest');
+}
+
+/* ===================== SECTION 13: SCREEN — MAP ===================== */
+function renderMapScreen(){
+  const root = document.getElementById('app');
+  const profile = state.profiles[state.activeProfileKey];
+  if (!profile.pretest) { goToScreen('pretest'); return; }
+  const allPassed = allIslandsPassed(profile);
+  const islandsHtml = ISLANDS.map(function (isl) {
+    const status = computeIslandStatus(profile, isl.id);
+    const lvl = profile.levels && profile.levels[isl.id];
+    const badge = status === 'passed' ? (lvl.medal === 'gold' ? '🥇' : lvl.medal === 'silver' ? '🥈' : '🥉') : (status === 'locked' ? '🔒' : '');
+    return '' +
+      '<button class="island-btn" data-testid="island-' + isl.id + '" data-status="' + status + '" data-island-id="' + isl.id + '" ' + (status === 'locked' ? 'disabled' : '') + '>' +
+        (badge ? '<span class="island-badge">' + badge + '</span>' : '') +
+        '<span class="island-icon">' + ISLAND_ICONS[isl.id] + '</span>' +
+        '<span class="island-name">' + escapeHtml(isl.island) + '</span>' +
+      '</button>';
+  }).join('');
+
+  root.innerHTML = '' +
+    '<div data-testid="screen-map" class="stack">' +
+      '<div class="title-row">' +
+        '<button class="btn btn-secondary" style="min-height:40px;padding:8px 12px;font-size:.8rem" id="btn-switch-profile" data-testid="btn-switch-profile">🔄 เปลี่ยนผู้เล่น</button>' +
+      '</div>' +
+      '<div class="center"><div class="app-title">🗺️ แผนที่เกาะสระวิเศษ</div><div class="subtitle">สวัสดี ' + escapeHtml(profile.displayName) + '!</div></div>' +
+      '<div class="parrot-wrap" id="parrot-mascot">' + parrotSVG('idle') + '</div>' +
+      '<div class="island-grid">' + islandsHtml + '</div>' +
+      '<button class="btn btn-secondary btn-block" data-testid="btn-goto-trace" id="btn-goto-trace">✍️ โซนฝึกเขียนสระ</button>' +
+      (allPassed ? '<button class="btn btn-block" data-testid="btn-goto-posttest" id="btn-goto-posttest">🏆 แบบทดสอบหลังเรียน</button>' : '') +
+      (profile.posttest ? '<button class="btn btn-secondary btn-block" data-testid="btn-goto-summary" id="btn-goto-summary">📊 สรุปผลการเรียน</button>' : '') +
+    '</div>';
+
+  document.getElementById('btn-switch-profile').addEventListener('click', function () {
+    state.activeProfileKey = null;
+    goToScreen('profile');
+  });
+  document.getElementById('btn-goto-trace').addEventListener('click', function () { goToScreen('trace'); });
+  document.querySelectorAll('.island-btn:not([disabled])').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const id = Number(btn.getAttribute('data-island-id'));
+      state.selectedIslandId = id;
+      goToScreen('game', { islandId: id });
+    });
+  });
+  const postBtn = document.getElementById('btn-goto-posttest');
+  if (postBtn) postBtn.addEventListener('click', function () { goToScreen('posttest'); });
+  const summaryBtn = document.getElementById('btn-goto-summary');
+  if (summaryBtn) summaryBtn.addEventListener('click', function () { state.summaryReturnTo = 'map'; goToScreen('summary'); });
+}
+
+/* ===================== SECTION 14: SCREEN — GAME ===================== */
+function renderGameScreen(params){
+  const islandId = params.islandId || state.selectedIslandId;
+  state.selectedIslandId = islandId;
+  state.game = newLevelSession(islandId);
+  const root = document.getElementById('app');
+  const level = getIslandById(islandId);
+
+  root.innerHTML = '' +
+    '<div data-testid="screen-game" class="stack">' +
+      '<div class="title-row" style="justify-content:space-between">' +
+        '<button class="btn btn-secondary" style="min-height:40px;padding:8px 12px;font-size:.8rem" id="btn-exit-game">← แผนที่</button>' +
+        '<span style="font-weight:800">' + ISLAND_ICONS[level.id] + ' ' + escapeHtml(level.island) + '</span>' +
+      '</div>' +
+      '<div class="progress-wrap">' +
+        '<div class="progress-track"><div class="progress-fill" data-testid="progress-fill" style="width:0%"></div></div>' +
+        '<span data-testid="progress-bar" style="font-size:.8rem;color:var(--ink-soft);white-space:nowrap">ข้อ 1/' + state.game.questions.length + '</span>' +
+        '<span data-testid="score-display" id="score-display">0</span>' +
+      '</div>' +
+      '<div class="stage" id="game-stage">' +
+        '<div id="question-area" data-testid="question-area"></div>' +
+        '<div class="hint-area" data-testid="hint-area"></div>' +
+        '<div class="parrot-wrap" id="parrot-mascot">' + parrotSVG('idle') + '</div>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('btn-exit-game').addEventListener('click', function () { goToScreen('map'); });
+  renderQuestionArea();
+}
+
+function renderQuestionArea(){
+  const g = state.game;
+  if (!g) return;
+  const total = g.questions.length;
+  const idx = g.currentIndex;
+  const pct = Math.round((idx / total) * 100);
+  const fillEl = document.querySelector('[data-testid="progress-fill"]');
+  if (fillEl) fillEl.style.width = pct + '%';
+  const barEl = document.querySelector('[data-testid="progress-bar"]');
+  if (barEl) barEl.textContent = 'ข้อ ' + (idx + 1) + '/' + total;
+  const hintEl = document.querySelector('[data-testid="hint-area"]');
+  if (hintEl) { hintEl.textContent = ''; hintEl.classList.remove('show'); }
+
+  const engine = engines[g.gameType];
+  const area = document.getElementById('question-area');
+  if (area) area.innerHTML = engine.renderQuestion(g.questions[idx], idx);
+  engine.attachHandlers(g.questions[idx], idx);
+  refreshSpeakButtonsVisibility();
+}
+
+/* ===================== SECTION 15: SCREEN — RESULT ===================== */
+function renderResultScreen(){
+  const root = document.getElementById('app');
+  const r = state.lastResult;
+  const level = getIslandById(r.levelId);
+  const nextLevel = getIslandById(r.levelId + 1);
+  const profile = state.profiles[state.activeProfileKey];
+  const nextUnlocked = nextLevel && computeIslandStatus(profile, nextLevel.id) !== 'locked';
+
+  const medalBlock = r.medal ?
+    '<div class="medal-emoji">' + (r.medal === 'gold' ? '🥇' : r.medal === 'silver' ? '🥈' : '🥉') + '</div>' :
+    trophySVG(null) + '<p class="subtitle">เกือบแล้ว! ลองอีกครั้งนะ</p>';
+
+  const reviewHtml = r.reviewWords && r.reviewWords.length ?
+    '<div class="review-chips" data-testid="result-review-list">' + r.reviewWords.map(function (w) { return '<span class="chip">' + escapeHtml(w) + '</span>'; }).join('') + '</div>' :
+    '<p class="subtitle center" data-testid="result-review-list">ไม่มีคำที่ต้องทบทวน เก่งมาก!</p>';
+
+  root.innerHTML = '' +
+    '<div data-testid="screen-result" class="stack">' +
+      '<div class="card stack center">' +
+        '<div class="subtitle">ผลการเล่น: ' + escapeHtml(level.island) + '</div>' +
+        medalBlock +
+        '<div class="score-big" data-testid="result-score">' + r.score + '<span style="font-size:1.1rem">/100</span></div>' +
+        '<div class="subtitle" data-testid="result-time">⏱️ ใช้เวลา ' + formatDuration(r.durationSec) + ' นาที</div>' +
+        '<div data-testid="result-medal" class="sr-only">' + (r.medal || 'none') + '</div>' +
+      '</div>' +
+      '<div class="card stack">' +
+        '<h3 style="font-size:.95rem">📝 คำที่ควรทบทวน</h3>' +
+        reviewHtml +
+      '</div>' +
+      (!nextLevel && r.passed ? '<div class="card center"><p class="subtitle">🎉 ผ่านครบทุกเกาะแล้ว! ทำแบบทดสอบหลังเรียนได้เลย</p></div>' : '') +
+      '<div class="btn-row">' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-back-map" id="btn-back-map">🗺️ กลับแผนที่</button>' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-retry-level" id="btn-retry-level">🔁 เล่นอีกครั้ง</button>' +
+        (nextLevel ? '<button class="btn btn-block" data-testid="btn-next-island" id="btn-next-island" ' + (nextUnlocked ? '' : 'disabled') + '>➡️ ด่านถัดไป</button>' : '') +
+        (!nextLevel && r.passed ? '<button class="btn btn-block" data-testid="btn-goto-posttest" id="btn-goto-posttest">🏆 แบบทดสอบหลังเรียน</button>' : '') +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('btn-back-map').addEventListener('click', function () { goToScreen('map'); });
+  document.getElementById('btn-retry-level').addEventListener('click', function () { goToScreen('game', { islandId: r.levelId }); });
+  const nextBtn = document.getElementById('btn-next-island');
+  if (nextBtn) nextBtn.addEventListener('click', function () { goToScreen('game', { islandId: r.levelId + 1 }); });
+  const postBtn = document.getElementById('btn-goto-posttest');
+  if (postBtn) postBtn.addEventListener('click', function () { goToScreen('posttest'); });
+}
+
+/* ===================== SECTION 16: MINIGAME ENGINES ===================== */
+const engines = {};
+
+/* --- basket --- */
+engines.basket = {
+  buildQuestionSet: function (level) {
+    const usable = level.words.filter(function (w) { return !w.m; });
+    const order = shuffle(usable.map(function (w, i) { return i; }));
+    const targetVowel = usable[0].v;
+    const pool = collectAllVowelNames().filter(function (v) { return v !== targetVowel; });
+    const distractors = sampleN(pool, 2);
+    const baskets = shuffle([
+      { vowel: targetVowel, glyph: VF[targetVowel] },
+      { vowel: distractors[0], glyph: VF[distractors[0]] },
+      { vowel: distractors[1], glyph: VF[distractors[1]] },
+    ]);
+    return order.map(function (i) {
+      return { word: usable[i], baskets: baskets, correctAnswer: targetVowel };
+    });
+  },
+  renderQuestion: function (q) {
+    const basketsHtml = q.baskets.map(function (b, i) {
+      return '<button class="basket" data-testid="basket-' + i + '" data-basket-vowel="' + escapeHtml(b.vowel) + '">' +
+        '<span class="basket-glyph">' + escapeHtml(b.glyph) + '</span><span class="basket-name">' + escapeHtml(b.vowel) + '</span></button>';
+    }).join('');
+    return '' +
+      '<p class="basket-hint-text">แตะคำ แล้วแตะตะกร้าสระที่ถูกต้อง หรือจะลากคำไปใส่ตะกร้าก็ได้</p>' +
+      '<div class="word-card-wrap"><div class="word-card" data-testid="word-card" id="word-card">' + escapeHtml(q.word.w) + '</div></div>' +
+      (state.speechAvailable ? '<div class="center"><button class="speak-btn" id="basket-speak-btn">🔊</button></div>' : '') +
+      '<div class="basket-row">' + basketsHtml + '</div>';
+  },
+  attachHandlers: function () {
+    const card = document.getElementById('word-card');
+    const speakBtn = document.getElementById('basket-speak-btn');
+    if (speakBtn) speakBtn.addEventListener('click', function () {
+      const g = state.game; speakWord(g.questions[g.currentIndex].word.w);
+    });
+    if (!card) return;
+    card.addEventListener('pointerdown', onCardPointerDown);
+    card.addEventListener('pointermove', onCardPointerMove);
+    card.addEventListener('pointerup', onCardPointerUp);
+    card.addEventListener('pointercancel', onCardPointerUp);
+    document.querySelectorAll('.basket').forEach(function (b) {
+      b.addEventListener('click', function () { onBasketTap(b.getAttribute('data-basket-vowel')); });
+    });
+  },
+};
+
+function onCardPointerDown(e){
+  const g = state.game;
+  if (!g || g.answerLocked) return;
+  g.dragStart = { x: e.clientX, y: e.clientY };
+  try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+}
+function onCardPointerMove(e){
+  const g = state.game;
+  if (!g || !g.dragStart || g.answerLocked) return;
+  const card = document.getElementById('word-card');
+  if (!card) return;
+  const dx = e.clientX - g.dragStart.x;
+  const dy = e.clientY - g.dragStart.y;
+  card.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+}
+function onCardPointerUp(e){
+  const g = state.game;
+  if (!g || !g.dragStart || g.answerLocked) { if (g) g.dragStart = null; return; }
+  const start = g.dragStart;
+  g.dragStart = null;
+  const card = document.getElementById('word-card');
+  const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+
+  if (dist < 10) {
+    if (card) card.style.transform = '';
+    toggleCardSelection();
+    return;
+  }
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const basketEl = el && el.closest ? el.closest('.basket') : null;
+  if (card) card.style.transform = '';
+  if (basketEl) attemptBasketMatch(basketEl.getAttribute('data-basket-vowel'));
+}
+function toggleCardSelection(){
+  const card = document.getElementById('word-card');
+  const g = state.game;
+  if (!card || !g) return;
+  g.selectedCardIndex = g.selectedCardIndex === 0 ? null : 0;
+  card.style.outline = g.selectedCardIndex === 0 ? '4px solid var(--accent)' : '';
+}
+function onBasketTap(vowel){
+  const g = state.game;
+  if (!g || g.answerLocked) return;
+  if (g.selectedCardIndex === null) {
+    showHint('แตะคำก่อน แล้วค่อยแตะตะกร้านะ');
+    return;
+  }
+  g.selectedCardIndex = null;
+  attemptBasketMatch(vowel);
+}
+function attemptBasketMatch(vowel){
+  const g = state.game;
+  if (!g || g.answerLocked) return;
+  const q = g.questions[g.currentIndex];
+  submitAnswer(vowel === q.correctAnswer, { word: q.word });
+}
+
+/* --- vowel --- */
+engines.vowel = {
+  buildQuestionSet: function (level) {
+    const usable = level.words.filter(function (w) { return !w.m; });
+    const order = shuffle(usable.map(function (w, i) { return i; }));
+    return order.map(function (i) {
+      const word = usable[i];
+      const wrongPool = Object.keys(VF).filter(function (v) { return v !== word.v; });
+      const wrongs = sampleN(wrongPool, 2);
+      const options = shuffle([word.v, wrongs[0], wrongs[1]]);
+      return { word: word, options: options, correctAnswer: word.v };
+    });
+  },
+  renderQuestion: function (q) {
+    const optionsHtml = q.options.map(function (opt, i) {
+      return '<button class="option-btn" data-testid="option-' + i + '">' + escapeHtml(opt) + ' (' + escapeHtml(VF[opt]) + ')</button>';
+    }).join('');
+    return '' +
+      '<div class="prompt-box">' +
+        '<div class="prompt-word" data-testid="prompt-word">' + escapeHtml(q.word.w) + '</div>' +
+        (state.speechAvailable ? '<button class="speak-btn" id="vowel-speak-btn" data-testid="speak-btn">🔊</button>' : '') +
+        '<p class="prompt-hint">คำนี้ใช้สระอะไร?</p>' +
+      '</div>' +
+      '<div class="options-col">' + optionsHtml + '</div>';
+  },
+  attachHandlers: function (q) {
+    const speakBtn = document.getElementById('vowel-speak-btn');
+    if (speakBtn) speakBtn.addEventListener('click', function () { speakWord(q.word.w); });
+    document.querySelectorAll('.option-btn').forEach(function (btn, i) {
+      btn.addEventListener('click', function () { onOptionClick(i); });
+    });
+  },
+};
+
+/* --- match --- */
+engines.match = {
+  buildQuestionSet: function (level) {
+    const order = shuffle(level.words.map(function (w, i) { return i; }));
+    return order.map(function (i) {
+      const word = level.words[i];
+      const others = level.words.filter(function (w) { return w.w !== word.w; });
+      const wrongs = sampleN(others, 2).map(function (w) { return w.w; });
+      const options = shuffle([word.w, wrongs[0], wrongs[1]]);
+      return { word: word, options: options, correctAnswer: word.w };
+    });
+  },
+  renderQuestion: function (q) {
+    const optionsHtml = q.options.map(function (opt, i) {
+      return '<button class="option-btn mini-speak" data-testid="option-' + i + '" data-word="' + escapeHtml(opt) + '">' +
+        (state.speechAvailable ? '<span class="mini-speak-icon" data-speak-opt="' + i + '">🔊</span>' : '') +
+        '<span>' + escapeHtml(opt) + '</span></button>';
+    }).join('');
+    return '' +
+      '<div class="prompt-box">' +
+        '<div class="prompt-emoji" data-testid="prompt-emoji">' + q.word.e + '</div>' +
+        '<p class="prompt-hint">' + escapeHtml(q.word.h) + '</p>' +
+        '<p class="prompt-hint" style="font-weight:800;color:var(--ink)">ภาพนี้คือคำว่าอะไร?</p>' +
+      '</div>' +
+      '<div class="options-col">' + optionsHtml + '</div>';
+  },
+  attachHandlers: function (q) {
+    document.querySelectorAll('.option-btn').forEach(function (btn, i) {
+      btn.addEventListener('click', function (e) {
+        if (e.target && e.target.hasAttribute && e.target.hasAttribute('data-speak-opt')) return;
+        onOptionClick(i);
+      });
+    });
+    document.querySelectorAll('[data-speak-opt]').forEach(function (icon) {
+      icon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        speakWord(icon.parentElement.getAttribute('data-word'));
+      });
+    });
+  },
+};
+
+/* --- sort --- */
+engines.sort = {
+  buildQuestionSet: function (level) {
+    const chosenWords = sampleN(level.words, 5);
+    const chosenDis = shuffle(level.dis.slice());
+    const items = chosenWords.map(function (w) {
+      return { text: w.w, hint: w.h || '', emoji: w.e || null, hasFinal: false };
+    }).concat(chosenDis.map(function (t) {
+      return { text: t, hint: '', emoji: null, hasFinal: true };
+    }));
+    return shuffle(items).map(function (item) {
+      return {
+        word: { w: item.text, h: item.hint, e: item.emoji },
+        options: ['ไม่มีตัวสะกด', 'มีตัวสะกด'],
+        correctAnswer: item.hasFinal ? 'มีตัวสะกด' : 'ไม่มีตัวสะกด',
+      };
+    });
+  },
+  renderQuestion: function (q) {
+    return '' +
+      '<div class="prompt-box">' +
+        (q.word.e ? '<div class="prompt-emoji">' + q.word.e + '</div>' : '') +
+        '<div class="prompt-word" data-testid="prompt-word">' + escapeHtml(q.word.w) + '</div>' +
+        (state.speechAvailable ? '<button class="speak-btn" id="sort-speak-btn" data-testid="speak-btn">🔊</button>' : '') +
+        '<p class="prompt-hint" style="font-weight:800;color:var(--ink)">คำนี้มีตัวสะกดหรือไม่?</p>' +
+      '</div>' +
+      '<div class="sort-options-row">' +
+        q.options.map(function (opt, i) { return '<button class="option-btn" data-testid="option-' + i + '">' + escapeHtml(opt) + '</button>'; }).join('') +
+      '</div>';
+  },
+  attachHandlers: function (q) {
+    const speakBtn = document.getElementById('sort-speak-btn');
+    if (speakBtn) speakBtn.addEventListener('click', function () { speakWord(q.word.w); });
+    document.querySelectorAll('.option-btn').forEach(function (btn, i) {
+      btn.addEventListener('click', function () { onOptionClick(i); });
+    });
+  },
+};
+
+function onOptionClick(idx){
+  const g = state.game;
+  if (!g || g.answerLocked) return;
+  const q = g.questions[g.currentIndex];
+  const chosen = q.options[idx];
+  submitAnswer(chosen === q.correctAnswer, { word: q.word });
+}
+
+/* ===================== SECTION 17: TEST HOOK ===================== */
+window.__TEST_API__ = {
+  getState: function () {
+    return JSON.parse(JSON.stringify({
+      currentScreen: state.currentScreen,
+      game: state.game,
+      test: state.test,
+      lastResult: state.lastResult,
+      lastTestResult: state.lastTestResult,
+      speechAvailable: state.speechAvailable,
+      storageAvailable: state.storageAvailable,
+      group: state.group,
+      traceIndex: state.traceIndex,
+    }));
+  },
+  getProfiles: function () { return JSON.parse(JSON.stringify(state.profiles)); },
+  getTeacherPin: function () { return TEACHER_PIN; },
+  getGroupSessions: function () { return JSON.parse(JSON.stringify(state.groupSessions)); },
+  getTraceStrokes: function () { return JSON.parse(JSON.stringify(traceStrokes)); },
+};
+
+/* ===================== SECTION 19: ASSESSMENT DATA/LOGIC ===================== */
+function findSameVowelWord(island, targetVowel, excludeWords){
+  return island.words.find(function (w) {
+    return w.v === targetVowel && excludeWords.indexOf(w.w) === -1;
+  });
+}
+function buildPosttestPairForIsland(island){
+  const preA = island.words[0];
+  const preB = island.words[1];
+  const natA = island.words[5];
+  const natB = island.words[6];
+  const postA = (natA && natA.v === preA.v && natA.w !== preA.w) ? natA : findSameVowelWord(island, preA.v, [preA.w]);
+  const excludeForB = [preA.w, preB.w, postA ? postA.w : ''];
+  const postB = (natB && natB.v === preB.v && excludeForB.indexOf(natB.w) === -1) ? natB : findSameVowelWord(island, preB.v, excludeForB);
+  return { postA: postA || natA, postB: postB || natB };
+}
+function assessmentWordType(word){ return word.m ? 'match' : 'vowel'; }
+function buildAssessmentQuestion(island, word){
+  const type = assessmentWordType(word);
+  if (type === 'match') {
+    const allWords = ISLANDS.reduce(function (acc, isl) { return acc.concat(isl.words); }, []);
+    const others = allWords.filter(function (w) { return w.w !== word.w; });
+    const wrongs = sampleN(others, 2).map(function (w) { return w.w; });
+    const options = shuffle([word.w, wrongs[0], wrongs[1]]);
+    return { type: type, island: island, word: word, options: options, correctAnswer: word.w };
+  }
+  const wrongPool = Object.keys(VF).filter(function (v) { return v !== word.v; });
+  const wrongs = sampleN(wrongPool, 2);
+  const options = shuffle([word.v, wrongs[0], wrongs[1]]);
+  return { type: type, island: island, word: word, options: options, correctAnswer: word.v };
+}
+function buildPretestQuestions(){
+  const qs = [];
+  ISLANDS.forEach(function (isl) {
+    qs.push(buildAssessmentQuestion(isl, isl.words[0]));
+    qs.push(buildAssessmentQuestion(isl, isl.words[1]));
+  });
+  return shuffle(qs);
+}
+function buildPosttestQuestions(){
+  const qs = [];
+  ISLANDS.forEach(function (isl) {
+    const pair = buildPosttestPairForIsland(isl);
+    qs.push(buildAssessmentQuestion(isl, pair.postA));
+    qs.push(buildAssessmentQuestion(isl, pair.postB));
+  });
+  return shuffle(qs);
+}
+
+/* ===================== SECTION 20: ASSESSMENT ENGINE ===================== */
+function newTestSession(mode){
+  const questions = mode === 'pretest' ? buildPretestQuestions() : buildPosttestQuestions();
+  return {
+    mode: mode,
+    questions: questions,
+    currentIndex: 0,
+    correctFirstTry: 0,
+    answerLocked: false,
+    answers: [],
+    attemptsThisQuestion: 0,
+    startTime: Date.now(),
+  };
+}
+function submitAssessmentAnswer(chosenValue){
+  const t = state.test;
+  if (!t || t.answerLocked) return;
+  const q = t.questions[t.currentIndex];
+  const isCorrect = chosenValue === q.correctAnswer;
+  const profile = state.profiles[state.activeProfileKey];
+
+  if (isCorrect) {
+    t.answerLocked = true;
+    disableAllOptionButtons();
+    t.attemptsThisQuestion += 1;
+    if (t.attemptsThisQuestion === 1) t.correctFirstTry += 1;
+    t.answers.push({ islandId: q.island.id, word: q.word.w, chosen: chosenValue, correct: true });
+    playCorrectChime();
+    bounceParrot('happy');
+    spawnConfetti(document.querySelector('.stage'));
+    showPraiseMessage();
+    const tm = setTimeout(advanceAssessmentQuestion, 1300);
+    registerTimer(tm);
+  } else {
+    t.attemptsThisQuestion += 1;
+    if (t.attemptsThisQuestion === 1) {
+      t.answers.push({ islandId: q.island.id, word: q.word.w, chosen: chosenValue, correct: false });
+    }
+    recordWrongWord(profile, q.word.w);
+    playWrongTone();
+    shakeCurrentCard();
+    bounceParrot('sad');
+    showHint(q.word.h);
+  }
+}
+function advanceAssessmentQuestion(){
+  const t = state.test;
+  if (!t) return;
+  t.answerLocked = false;
+  t.attemptsThisQuestion = 0;
+  t.currentIndex += 1;
+  if (t.currentIndex >= t.questions.length) {
+    finishAssessment();
+  } else {
+    renderAssessmentQuestionArea();
+  }
+}
+function finishAssessment(){
+  const t = state.test;
+  const endTime = Date.now();
+  const durationSec = Math.round((endTime - t.startTime) / 1000);
+  const profile = state.profiles[state.activeProfileKey];
+  const record = { score: t.correctFirstTry, answers: t.answers, durationSec: durationSec, completedAt: nowISO() };
+
+  let goNext = 'map';
+  if (t.mode === 'pretest') {
+    profile.pretest = record;
+    goNext = 'map';
+  } else {
+    if (!profile.posttest) {
+      profile.posttest = record;
+      state.showSurveyNext = true;
+      goNext = 'survey';
+    } else {
+      if (!profile.postAttempts) profile.postAttempts = [];
+      profile.postAttempts.push(record);
+      goNext = 'summary';
+    }
+  }
+  profile.lastPlayedAt = nowISO();
+  saveProfiles();
+  state.lastTestResult = record;
+  state.test = null;
+  goToScreen(goNext);
+}
+
+/* ===================== SECTION 21: SCREENS — PRETEST/POSTTEST/SURVEY/SUMMARY ===================== */
+function cleanupTestScreen(){
+  if (state.test) { state.test.answerLocked = false; }
+}
+function renderAssessmentQuestionArea(){
+  const t = state.test;
+  if (!t) return;
+  const idx = t.currentIndex;
+  const total = t.questions.length;
+  const pct = Math.round((idx / total) * 100);
+  const fill = document.getElementById('test-progress-fill');
+  if (fill) fill.style.width = pct + '%';
+  const label = document.getElementById('test-progress-label');
+  if (label) label.textContent = 'ข้อ ' + (idx + 1) + '/' + total;
+  showHint('');
+  const q = t.questions[idx];
+  const area = document.getElementById('test-question-area');
+  if (area) area.innerHTML = engines[q.type].renderQuestion(q);
+  document.querySelectorAll('#test-question-area .option-btn').forEach(function (btn, i) {
+    btn.addEventListener('click', function () { submitAssessmentAnswer(q.options[i]); });
+  });
+  const speakBtn = document.querySelector('#test-question-area .speak-btn');
+  if (speakBtn) speakBtn.addEventListener('click', function () { speakWord(q.word.w); });
+  document.querySelectorAll('#test-question-area [data-speak-opt]').forEach(function (icon) {
+    icon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      speakWord(icon.parentElement.getAttribute('data-word'));
+    });
+  });
+  refreshSpeakButtonsVisibility();
+}
+function renderTestScreenShell(mode){
+  const root = document.getElementById('app');
+  const title = mode === 'pretest' ? '📝 แบบทดสอบก่อนเรียน' : '🏆 แบบทดสอบหลังเรียน';
+  root.innerHTML = '' +
+    '<div data-testid="screen-' + mode + '" class="stack">' +
+      '<div class="center"><div class="app-title">' + title + '</div>' +
+        '<div class="subtitle">ตอบให้ดีที่สุดนะครับ ตอบผิดได้คำใบ้และลองใหม่ได้</div></div>' +
+      '<div class="progress-wrap">' +
+        '<div class="progress-track" data-testid="test-progress-bar"><div class="progress-fill" id="test-progress-fill" style="width:0%"></div></div>' +
+        '<span id="test-progress-label">ข้อ 1/' + TEST_TOTAL + '</span>' +
+      '</div>' +
+      '<div class="stage">' +
+        '<div class="parrot-wrap" id="parrot-mascot">' + parrotSVG('idle') + '</div>' +
+        '<div id="test-question-area"></div>' +
+        '<div class="hint-area" data-testid="hint-area"></div>' +
+      '</div>' +
+    '</div>';
+}
+function renderPretestScreen(){
+  const profile = state.profiles[state.activeProfileKey];
+  if (profile.pretest) { goToScreen('map'); return; }
+  state.test = newTestSession('pretest');
+  renderTestScreenShell('pretest');
+  renderAssessmentQuestionArea();
+}
+function renderPosttestScreen(){
+  const profile = state.profiles[state.activeProfileKey];
+  if (!allIslandsPassed(profile)) { goToScreen('map'); return; }
+  state.test = newTestSession('posttest');
+  renderTestScreenShell('posttest');
+  renderAssessmentQuestionArea();
+}
+function renderSurveyScreen(){
+  const root = document.getElementById('app');
+  root.innerHTML = '' +
+    '<div data-testid="screen-survey" class="stack">' +
+      '<div class="parrot-wrap">' + parrotSVG('idle') + '</div>' +
+      '<div class="center"><div class="app-title">หนูชอบเกมนี้แค่ไหน?</div></div>' +
+      '<div class="smiley-row">' +
+        '<button class="smiley-btn" data-testid="survey-1" data-value="1">😞</button>' +
+        '<button class="smiley-btn" data-testid="survey-3" data-value="3">😐</button>' +
+        '<button class="smiley-btn" data-testid="survey-5" data-value="5">😍</button>' +
+      '</div>' +
+    '</div>';
+  document.querySelectorAll('.smiley-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const profile = state.profiles[state.activeProfileKey];
+      profile.survey = { rating: Number(btn.getAttribute('data-value')), submittedAt: nowISO() };
+      saveProfiles();
+      goToScreen('summary');
+    });
+  });
+}
+function buildSummaryHtml(profile){
+  const pre = profile.pretest ? profile.pretest.score : null;
+  const post = profile.posttest ? profile.posttest.score : null;
+  const gain = (pre != null && post != null) ? (post - pre) : null;
+  const percentProgress = (pre != null && post != null) ? Math.round(((post - pre) / TEST_TOTAL) * 100) : null;
+
+  const compareHtml = '' +
+    '<div class="summary-compare">' +
+      '<div class="col"><div class="lbl">ก่อนเรียน</div><div class="big" data-testid="summary-pre">' + (pre != null ? pre : '-') + '</div></div>' +
+      '<div class="col"><div class="lbl">หลังเรียน</div><div class="big" data-testid="summary-post">' + (post != null ? post : 'ยังไม่ทำ') + '</div></div>' +
+      '<div class="col"><div class="lbl">ก้าวหน้า</div><div class="big" data-testid="summary-gain">' + (gain != null ? (gain >= 0 ? '+' : '') + gain : '-') + '</div></div>' +
+      '<div class="col"><div class="lbl">%ก้าวหน้า</div><div class="big" data-testid="summary-percent">' + (percentProgress != null ? percentProgress + '%' : '-') + '</div></div>' +
+    '</div>';
+
+  const levelRows = ISLANDS.map(function (isl) {
+    const lvl = (profile.levels && profile.levels[isl.id]) || defaultLevelState();
+    return '<tr><td>' + escapeHtml(isl.island) + '</td><td>' + lvl.bestScore + '</td><td>' + (lvl.medal || '-') + '</td><td>' + (lvl.passed ? '✅' : '—') + '</td></tr>';
+  }).join('');
+  const levelTableHtml = '' +
+    '<div class="table-scroll"><table class="summary-table" data-testid="summary-level-table">' +
+      '<thead><tr><th>เกาะ</th><th>คะแนน</th><th>เหรียญ</th><th>ผ่าน</th></tr></thead>' +
+      '<tbody>' + levelRows + '</tbody>' +
+    '</table></div>';
+
+  const totalTimeSec = (profile.pretest ? profile.pretest.durationSec : 0) +
+    (profile.posttest ? profile.posttest.durationSec : 0) +
+    ISLANDS.reduce(function (sum, isl) {
+      const lvl = profile.levels && profile.levels[isl.id];
+      return sum + (lvl ? (lvl.totalTimeSec || 0) : 0);
+    }, 0);
+
+  const wrongCounts = profile.wrongWordCounts || {};
+  const topErrors = Object.keys(wrongCounts)
+    .map(function (w) { return { w: w, c: wrongCounts[w] }; })
+    .sort(function (a, b) { return b.c - a.c; })
+    .slice(0, 5);
+  const errorChipsHtml = topErrors.length ?
+    topErrors.map(function (e) { return '<span class="error-chip">' + escapeHtml(e.w) + ' (' + e.c + ' ครั้ง)</span>'; }).join('') :
+    '<p class="subtitle">ยังไม่มีข้อมูลคำที่ผิดบ่อย</p>';
+
+  const traceSummary = computeTraceSummary(profile);
+  const traceWeakChipsHtml = traceSummary.weakVowelList.length ?
+    traceSummary.weakVowelList.map(function (v) { return '<span class="error-chip">' + escapeHtml(v) + '</span>'; }).join('') :
+    '<p class="subtitle">ยังไม่มีสระที่ต้องทบทวน</p>';
+  const traceHtml = '' +
+    '<div class="card stack"><h3 style="font-size:.95rem">✍️ ผลการฝึกเขียนสระ</h3>' +
+      '<p class="subtitle" data-testid="summary-trace-done">ฝึกแล้ว ' + traceSummary.done + '/' + TRACE_VOWELS.length + ' สระ · ความแม่นยำเฉลี่ย ' +
+      (traceSummary.avgAccuracyPct != null ? traceSummary.avgAccuracyPct + '%' : '-') + '</p>' +
+      '<div class="review-chips" data-testid="summary-trace-weak">' + traceWeakChipsHtml + '</div>' +
+    '</div>';
+
+  return '' +
+    '<div data-testid="screen-summary" class="stack">' +
+      '<div class="center"><div class="app-title">📊 สรุปผลการเรียน</div><div class="subtitle">' + escapeHtml(profile.displayName) + ' · ' + escapeHtml(profile.classRoom) + ' เลขที่ ' + escapeHtml(profile.studentNo) + '</div></div>' +
+      '<div class="card stack">' + compareHtml + '</div>' +
+      '<div class="card stack"><h3 style="font-size:.95rem">คะแนนรายด่าน</h3>' + levelTableHtml + '</div>' +
+      '<div class="card stack"><h3 style="font-size:.95rem">⏱️ เวลารวม: ' + formatDuration(totalTimeSec) + ' นาที</h3></div>' +
+      '<div class="card stack"><h3 style="font-size:.95rem">📝 คำที่ผิดบ่อย 5 อันดับ</h3><div class="review-chips" data-testid="summary-error-words">' + errorChipsHtml + '</div></div>' +
+      traceHtml +
+      '<div class="btn-row">' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-summary-png" id="btn-summary-png">🖼️ บันทึกภาพส่งครู</button>' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-summary-csv" id="btn-summary-csv">📄 ส่งออก CSV</button>' +
+      '</div>' +
+      '<button class="btn btn-block" data-testid="btn-summary-back" id="btn-summary-back">' + (state.summaryReturnTo === 'teacher' ? '🔙 กลับโหมดครู' : '🗺️ กลับแผนที่') + '</button>' +
+    '</div>';
+}
+function renderSummaryScreen(){
+  const root = document.getElementById('app');
+  const profile = state.profiles[state.activeProfileKey];
+  root.innerHTML = buildSummaryHtml(profile);
+  document.getElementById('btn-summary-png').addEventListener('click', function () { exportSummaryPNG(state.activeProfileKey); });
+  document.getElementById('btn-summary-csv').addEventListener('click', function () { exportSummaryCSV(state.activeProfileKey); });
+  document.getElementById('btn-summary-back').addEventListener('click', function () {
+    if (state.summaryReturnTo === 'teacher') { goToScreen('teacher'); } else { goToScreen('map'); }
+    state.summaryReturnTo = 'map';
+  });
+}
+
+/* ===================== SECTION 22: SCREEN — TEACHER MODE ===================== */
+function openModal(html){
+  document.getElementById('modal-root').innerHTML = html;
+}
+function closeModal(){
+  document.getElementById('modal-root').innerHTML = '';
+}
+function openTeacherPinModal(){
+  state.teacherPinError = '';
+  openModal('' +
+    '<div class="modal-overlay" data-testid="modal-teacher-pin">' +
+      '<div class="modal-card stack">' +
+        '<h3>🔒 โหมดครู</h3>' +
+        '<p>กรุณาใส่รหัส PIN</p>' +
+        '<input type="password" id="teacher-pin-input" data-testid="input-teacher-pin" inputmode="numeric" maxlength="8">' +
+        '<p class="error-text" id="teacher-pin-error"></p>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-secondary btn-block" id="btn-pin-cancel" data-testid="btn-pin-cancel">ยกเลิก</button>' +
+          '<button class="btn btn-block" id="btn-pin-submit" data-testid="btn-pin-submit">เข้าสู่ระบบ</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>');
+  document.getElementById('btn-pin-cancel').addEventListener('click', closeModal);
+  document.getElementById('btn-pin-submit').addEventListener('click', onTeacherPinSubmit);
+  const input = document.getElementById('teacher-pin-input');
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') onTeacherPinSubmit(); });
+  input.focus();
+}
+function onTeacherPinSubmit(){
+  const input = document.getElementById('teacher-pin-input');
+  const val = input ? input.value : '';
+  if (val === TEACHER_PIN) {
+    closeModal();
+    goToScreen('teacher');
+  } else {
+    const err = document.getElementById('teacher-pin-error');
+    if (err) err.textContent = 'รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง';
+    if (input) { input.value = ''; input.focus(); }
+  }
+}
+function openClearConfirmModal1(){
+  const count = Object.keys(state.profiles).length;
+  openModal('' +
+    '<div class="modal-overlay" data-testid="modal-clear-1">' +
+      '<div class="modal-card stack">' +
+        '<h3>⚠️ ยืนยันการล้างข้อมูล</h3>' +
+        '<p>ต้องการลบข้อมูลนักเรียนทั้งหมด ' + count + ' คนใช่หรือไม่? การกระทำนี้ย้อนกลับไม่ได้</p>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-secondary btn-block" id="btn-clear-cancel-1" data-testid="btn-clear-cancel-1">ยกเลิก</button>' +
+          '<button class="btn btn-block" id="btn-clear-next" data-testid="btn-clear-next" style="background:var(--soft-warn)">ดำเนินการต่อ</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>');
+  document.getElementById('btn-clear-cancel-1').addEventListener('click', closeModal);
+  document.getElementById('btn-clear-next').addEventListener('click', openClearConfirmModal2);
+}
+function openClearConfirmModal2(){
+  openModal('' +
+    '<div class="modal-overlay" data-testid="modal-clear-2">' +
+      '<div class="modal-card stack">' +
+        '<h3>⚠️ ยืนยันอีกครั้ง</h3>' +
+        '<p>นี่คือการยืนยันครั้งสุดท้าย ข้อมูลนักเรียนทั้งหมดจะถูกลบถาวรและกู้คืนไม่ได้</p>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-secondary btn-block" id="btn-clear-cancel-2" data-testid="btn-clear-cancel-2">ยกเลิก</button>' +
+          '<button class="btn btn-block" id="btn-clear-confirm" data-testid="btn-clear-confirm" style="background:var(--soft-warn)">ลบข้อมูลทั้งหมด</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>');
+  document.getElementById('btn-clear-cancel-2').addEventListener('click', closeModal);
+  document.getElementById('btn-clear-confirm').addEventListener('click', function () {
+    state.profiles = {};
+    state.groupSessions = [];
+    saveProfiles();
+    closeModal();
+    goToScreen('profile');
+  });
+}
+function renderTeacherScreen(){
+  const root = document.getElementById('app');
+  const keys = Object.keys(state.profiles);
+  const rows = keys.map(function (key) {
+    const p = state.profiles[key];
+    const passedCount = ISLANDS.filter(function (isl) { return computeIslandStatus(p, isl.id) === 'passed'; }).length;
+    const pre = p.pretest ? p.pretest.score : '-';
+    const post = p.posttest ? p.posttest.score : 'ยังไม่ทำ';
+    const percent = (p.pretest && p.posttest) ? Math.round(((p.posttest.score - p.pretest.score) / TEST_TOTAL) * 100) + '%' : '-';
+    return '<tr class="teacher-row" data-key="' + escapeHtml(key) + '" data-testid="teacher-row-' + escapeHtml(key) + '">' +
+      '<td>' + escapeHtml(p.displayName) + '</td><td>' + escapeHtml(p.classRoom) + '</td><td>' + escapeHtml(p.studentNo) + '</td>' +
+      '<td>' + pre + '</td><td>' + post + '</td><td>' + percent + '</td><td>' + passedCount + '/10</td>' +
+      '<td>' + (p.survey ? p.survey.rating : '-') + '</td></tr>';
+  }).join('');
+  const groupRows = state.groupSessions.slice().reverse().map(function (s) {
+    const dateLabel = s.createdAt ? s.createdAt.slice(0, 16).replace('T', ' ') : '-';
+    return '<tr class="group-history-row" data-testid="group-history-row-' + s.id + '" data-session-id="' + s.id + '">' +
+      '<td>' + escapeHtml(dateLabel) + '</td><td>' + groupModeLabel(s.mode) + '</td>' +
+      '<td>' + s.players.length + ' คน</td><td>' + groupGradeLabel(s.grade) + '</td>' +
+      '<td><button class="btn btn-secondary" style="min-height:36px;padding:6px 12px;font-size:.78rem" data-testid="btn-group-history-view-' + s.id + '">ดูผล</button></td>' +
+    '</tr>';
+  }).join('');
+  root.innerHTML = '' +
+    '<div data-testid="screen-teacher" class="stack">' +
+      '<div class="center"><div class="app-title">👩‍🏫 โหมดครู</div><div class="subtitle">นักเรียนทั้งหมด ' + keys.length + ' คน</div></div>' +
+      '<div class="table-scroll"><table class="summary-table" data-testid="teacher-table">' +
+        '<thead><tr><th>ชื่อ</th><th>ชั้น</th><th>เลขที่</th><th>Pre</th><th>Post</th><th>%</th><th>ผ่าน</th><th>😊</th></tr></thead>' +
+        '<tbody>' + (rows || '<tr><td colspan="8">ยังไม่มีนักเรียน</td></tr>') + '</tbody>' +
+      '</table></div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-teacher-export-all" id="btn-teacher-export-all">📄 ส่งออก CSV รวมทุกคน</button>' +
+        '<button class="btn btn-secondary btn-block" data-testid="btn-teacher-clear" id="btn-teacher-clear" style="color:var(--soft-warn);border-color:var(--soft-warn)">🗑️ ล้างข้อมูลทั้งหมด</button>' +
+      '</div>' +
+      '<h3 style="font-size:1rem">👥 ประวัติโหมดกลุ่ม</h3>' +
+      '<div class="table-scroll"><table class="summary-table" data-testid="group-history-table">' +
+        '<thead><tr><th>วันที่</th><th>วิธีเล่น</th><th>ผู้เล่น</th><th>ระดับชั้น</th><th></th></tr></thead>' +
+        '<tbody>' + (groupRows || '<tr><td colspan="5">ยังไม่มีประวัติโหมดกลุ่ม</td></tr>') + '</tbody>' +
+      '</table></div>' +
+      '<button class="btn btn-block" data-testid="btn-teacher-exit" id="btn-teacher-exit">🔙 ออกจากโหมดครู</button>' +
+    '</div>';
+  document.querySelectorAll('.teacher-row').forEach(function (tr) {
+    tr.addEventListener('click', function () {
+      state.activeProfileKey = tr.getAttribute('data-key');
+      state.summaryReturnTo = 'teacher';
+      goToScreen('summary');
+    });
+  });
+  document.querySelectorAll('.group-history-row [data-testid^="btn-group-history-view-"]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const tr = btn.closest('.group-history-row');
+      state.activeGroupSessionId = tr.getAttribute('data-session-id');
+      state.groupResultReturnTo = 'teacher';
+      goToScreen('groupResult');
+    });
+  });
+  document.getElementById('btn-teacher-export-all').addEventListener('click', exportClassCSV);
+  document.getElementById('btn-teacher-clear').addEventListener('click', openClearConfirmModal1);
+  document.getElementById('btn-teacher-exit').addEventListener('click', function () { goToScreen('profile'); });
+}
+
+/* ===================== SECTION 23: EXPORT — SUMMARY CSV/PNG ===================== */
+const SUMMARY_CSV_HEADER = ['ชื่อ', 'ชั้น', 'เลขที่', 'pre_score', 'post_score', 'gain', 'percent_progress',
+  'level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10',
+  'level_total', 'total_errors', 'total_time_sec', 'frequent_error_words', 'satisfaction', 'timestamp',
+  'trace_done', 'trace_accuracy_pct', 'trace_weak_vowels'];
+function computeProfileStats(profile){
+  const pre = profile.pretest ? profile.pretest.score : null;
+  const post = profile.posttest ? profile.posttest.score : null;
+  const gain = (pre != null && post != null) ? (post - pre) : null;
+  const percent = (pre != null && post != null) ? Math.round(((post - pre) / TEST_TOTAL) * 100) : null;
+  const levelScores = ISLANDS.map(function (isl) {
+    const lvl = profile.levels && profile.levels[isl.id];
+    return lvl ? lvl.bestScore : 0;
+  });
+  const levelTotal = levelScores.reduce(function (a, b) { return a + b; }, 0);
+  const wrongCounts = profile.wrongWordCounts || {};
+  const totalErrors = Object.keys(wrongCounts).reduce(function (sum, w) { return sum + wrongCounts[w]; }, 0);
+  const totalTimeSec = (profile.pretest ? profile.pretest.durationSec : 0) +
+    (profile.posttest ? profile.posttest.durationSec : 0) +
+    ISLANDS.reduce(function (sum, isl) {
+      const lvl = profile.levels && profile.levels[isl.id];
+      return sum + (lvl ? (lvl.totalTimeSec || 0) : 0);
+    }, 0);
+  const frequentErrorWords = Object.keys(wrongCounts)
+    .map(function (w) { return { w: w, c: wrongCounts[w] }; })
+    .sort(function (a, b) { return b.c - a.c; })
+    .slice(0, 5)
+    .map(function (e) { return e.w + '(' + e.c + ')'; })
+    .join('; ');
+  return { pre: pre, post: post, gain: gain, percent: percent, levelScores: levelScores, levelTotal: levelTotal,
+           totalErrors: totalErrors, totalTimeSec: totalTimeSec, frequentErrorWords: frequentErrorWords };
+}
+function buildSummaryCsvRow(profile){
+  const s = computeProfileStats(profile);
+  const t = computeTraceSummary(profile);
+  return [
+    profile.displayName, profile.classRoom, profile.studentNo,
+    s.pre != null ? s.pre : '', s.post != null ? s.post : '',
+    s.gain != null ? s.gain : '', s.percent != null ? s.percent : '',
+  ].concat(s.levelScores).concat([
+    s.levelTotal, s.totalErrors, s.totalTimeSec, s.frequentErrorWords,
+    profile.survey ? profile.survey.rating : '', nowISO(),
+    t.done, t.avgAccuracyPct != null ? t.avgAccuracyPct : '', t.weakVowels,
+  ]);
+}
+function downloadCsv(filename, rows){
+  try {
+    const csv = "﻿" + rows.map(function (r) { return r.join(','); }).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) { /* ห้ามให้แอปพัง */ }
+}
+function exportSummaryCSV(profileKey){
+  const p = state.profiles[profileKey];
+  if (!p) return;
+  downloadCsv(profileKey + '_summary.csv', [SUMMARY_CSV_HEADER, buildSummaryCsvRow(p)]);
+}
+function exportClassCSV(){
+  const rows = [SUMMARY_CSV_HEADER];
+  Object.keys(state.profiles).forEach(function (key) { rows.push(buildSummaryCsvRow(state.profiles[key])); });
+  downloadCsv('class_summary.csv', rows);
+}
+function exportSummaryPNG(profileKey){
+  try {
+    const p = state.profiles[profileKey];
+    if (!p) return;
+    const s = computeProfileStats(p);
+    const canvas = document.createElement('canvas');
+    canvas.width = 720; canvas.height = 960;
+    const ctx = canvas.getContext('2d');
+    const font = "'Sarabun','Noto Sans Thai','Leelawadee UI','Tahoma',sans-serif";
+    ctx.fillStyle = '#FFF6DE';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#15304C';
+    ctx.textAlign = 'left';
+    let y = 60;
+    ctx.font = '700 34px ' + font;
+    ctx.fillText('สรุปผลการเรียน: ' + p.displayName, 40, y); y += 44;
+    ctx.font = '400 22px ' + font;
+    ctx.fillText(p.classRoom + ' เลขที่ ' + p.studentNo, 40, y); y += 50;
+
+    ctx.font = '700 26px ' + font;
+    ctx.fillText('ก่อนเรียน: ' + (s.pre != null ? s.pre : '-') + ' / ' + TEST_TOTAL, 40, y); y += 38;
+    ctx.fillText('หลังเรียน: ' + (s.post != null ? s.post : 'ยังไม่ทำ') + (s.post != null ? (' / ' + TEST_TOTAL) : ''), 40, y); y += 38;
+    ctx.fillText('ก้าวหน้า: ' + (s.gain != null ? ((s.gain >= 0 ? '+' : '') + s.gain) : '-') + (s.percent != null ? (' (' + s.percent + '%)') : ''), 40, y); y += 50;
+
+    ctx.font = '700 24px ' + font;
+    ctx.fillText('คะแนนรายด่าน', 40, y); y += 34;
+    ctx.font = '400 20px ' + font;
+    ISLANDS.forEach(function (isl) {
+      const lvl = p.levels && p.levels[isl.id];
+      const line = isl.island + ': ' + (lvl ? lvl.bestScore : 0) + ' คะแนน' + (lvl && lvl.passed ? ' ✅' : '');
+      ctx.fillText(line, 40, y); y += 28;
+    });
+    y += 14;
+
+    ctx.font = '700 24px ' + font;
+    ctx.fillText('เวลารวม: ' + formatDuration(s.totalTimeSec) + ' นาที', 40, y); y += 40;
+
+    ctx.font = '700 24px ' + font;
+    ctx.fillText('คำที่ผิดบ่อย 5 อันดับ', 40, y); y += 32;
+    ctx.font = '400 20px ' + font;
+    ctx.fillText(s.frequentErrorWords || 'ไม่มีข้อมูล', 40, y);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = profileKey + '_summary.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) { /* ห้ามให้แอปพัง */ }
+}
+
+/* ===================== SECTION 25: GROUP MODE DATA/LOGIC ===================== */
+function buildGroupQuestion(island, word, optionCount){
+  const type = assessmentWordType(word);
+  const need = optionCount - 1;
+  if (type === 'match') {
+    const allWords = ISLANDS.reduce(function (acc, isl) { return acc.concat(isl.words); }, []);
+    const others = allWords.filter(function (w) { return w.w !== word.w; });
+    const wrongs = sampleN(others, need).map(function (w) { return w.w; });
+    const options = shuffle([word.w].concat(wrongs));
+    return { type: type, island: island, word: word, options: options, correctAnswer: word.w, attempts: 0 };
+  }
+  const wrongPool = Object.keys(VF).filter(function (v) { return v !== word.v; });
+  const wrongs = sampleN(wrongPool, need);
+  const options = shuffle([word.v].concat(wrongs));
+  return { type: type, island: island, word: word, options: options, correctAnswer: word.v, attempts: 0 };
+}
+function buildGroupSortQuestion(island, item, isDistractor){
+  const word = isDistractor ? { w: item, e: null, h: '' } : { w: item.w, e: item.e || null, h: item.h || '' };
+  const correctAnswer = isDistractor ? 'มีตัวสะกด' : 'ไม่มีตัวสะกด';
+  const options = shuffle(['ไม่มีตัวสะกด', 'มีตัวสะกด']);
+  return { type: 'sort', island: island, word: word, options: options, correctAnswer: correctAnswer, attempts: 0 };
+}
+function buildGroupQuestionPool(islandIds, grade, optionCount){
+  const islands = ISLANDS.filter(function (isl) { return islandIds.indexOf(isl.id) !== -1; });
+  const pool = [];
+  islands.forEach(function (isl) {
+    isl.words.forEach(function (w) { pool.push(buildGroupQuestion(isl, w, optionCount)); });
+    if (grade === 'p23') {
+      isl.words.forEach(function (w) { pool.push(buildGroupSortQuestion(isl, w, false)); });
+      isl.dis.forEach(function (t) { pool.push(buildGroupSortQuestion(isl, t, true)); });
+    }
+  });
+  return shuffle(pool);
+}
+function pickGroupQuestions(pool, totalNeeded){
+  const out = [];
+  if (!pool.length) return out;
+  let cycle = shuffle(pool.slice());
+  let idx = 0;
+  let passNum = 0;
+  for (let i = 0; i < totalNeeded; i++) {
+    if (idx >= cycle.length) { cycle = shuffle(pool.slice()); idx = 0; passNum++; }
+    const base = cycle[idx]; idx++;
+    out.push(passNum === 0 ? base : Object.assign({}, base, { attempts: 0, options: shuffle(base.options.slice()) }));
+  }
+  return out;
+}
+function buildTurnOrder(playerCount, rounds){
+  const order = [];
+  for (let r = 0; r < rounds; r++) {
+    for (let p = 0; p < playerCount; p++) { order.push(p); }
+  }
+  return order;
+}
+
+/* ===================== SECTION 26: GROUP MODE ENGINE ===================== */
+function currentGroupPlayer(){
+  const g = state.group;
+  if (!g) return null;
+  if (g.mode === 'buzz') {
+    if (!g.buzzState || g.buzzState.activePlayerId == null) return null;
+    return g.players[g.buzzState.activePlayerId];
+  }
+  return g.players[g.turnOrder[g.currentIndex]];
+}
+function recordGroupStat(player, q, firstTry){
+  const key = q.type === 'sort' ? q.island.vowel : q.word.v;
+  if (!player.vowelStats[key]) player.vowelStats[key] = { ok: 0, n: 0 };
+  player.vowelStats[key].n += 1;
+  if (firstTry) player.vowelStats[key].ok += 1;
+}
+function stopBuzzTimer(){
+  const g = state.group;
+  if (g && g.buzzState && g.buzzState.timerId) { clearInterval(g.buzzState.timerId); g.buzzState.timerId = null; }
+}
+function startGroupSession(draft){
+  const optionCount = draft.grade === 'p1' ? 3 : 4;
+  const players = draft.playerNames.slice(0, draft.playerCount).map(function (name, i) {
+    return {
+      id: i,
+      name: (name && name.trim()) ? name.trim() : ('ผู้เล่น ' + (i + 1)),
+      theme: GROUP_PLAYER_THEMES[i % GROUP_PLAYER_THEMES.length],
+      team: draft.mode === 'team' ? (i % 2 === 0 ? 'red' : 'blue') : null,
+      score: 0, vowelStats: {}, wrongWords: [],
+    };
+  });
+  const pool = buildGroupQuestionPool(draft.islandIds, draft.grade, optionCount);
+  const totalNeeded = players.length * draft.questionsPerPlayer;
+  const questions = pickGroupQuestions(pool, totalNeeded);
+  state.group = {
+    grade: draft.grade, mode: draft.mode,
+    islandIds: draft.islandIds.slice(), questionsPerPlayer: draft.questionsPerPlayer,
+    players: players, questions: questions,
+    turnOrder: draft.mode !== 'buzz' ? buildTurnOrder(players.length, draft.questionsPerPlayer) : null,
+    currentIndex: 0, answerLocked: false, buzzState: null,
+    startedAt: Date.now(),
+  };
+  goToScreen('groupGame');
+}
+function submitGroupAnswer(chosenValue){
+  const g = state.group;
+  if (!g || g.answerLocked) return;
+  if (g.mode === 'buzz' && (!g.buzzState || g.buzzState.activePlayerId == null)) return;
+  const q = g.questions[g.currentIndex];
+  const player = currentGroupPlayer();
+  if (!player) return;
+  const isCorrect = chosenValue === q.correctAnswer;
+  q.attempts += 1;
+
+  if (isCorrect) {
+    g.answerLocked = true;
+    disableAllOptionButtons();
+    stopBuzzTimer();
+    const pts = q.attempts === 1 ? SCORE.FIRST : (q.attempts === 2 ? SCORE.SECOND : SCORE.THIRD_PLUS);
+    player.score += pts;
+    recordGroupStat(player, q, g.mode === 'buzz' ? true : (q.attempts === 1));
+    playCorrectChime();
+    bounceParrot('happy');
+    spawnConfetti(document.querySelector('.stage'));
+    showPraiseMessage();
+    const t = setTimeout(advanceGroupQuestion, 1300);
+    registerTimer(t);
+    return;
+  }
+
+  playWrongTone();
+  shakeCurrentCard();
+  bounceParrot('sad');
+  showHint(q.word.h);
+  if (q.word.w && player.wrongWords.indexOf(q.word.w) === -1) player.wrongWords.push(q.word.w);
+
+  if (g.mode === 'buzz') {
+    recordGroupStat(player, q, false);
+    stopBuzzTimer();
+    g.buzzState.excluded.push(player.id);
+    g.buzzState.activePlayerId = null;
+    if (g.buzzState.excluded.length >= g.players.length) {
+      const t = setTimeout(advanceGroupQuestion, 1500);
+      registerTimer(t);
+    } else {
+      renderGroupQuestionArea();
+    }
+  }
+  // โหมดผลัดกันตอบ/แข่งทีม: ไม่ล็อก ผู้เล่นคนเดิมได้คำใบ้และลองใหม่ได้ไม่จำกัด (ตาม CLAUDE.md)
+}
+function onPlayerBuzz(playerId){
+  const g = state.group;
+  if (!g || g.mode !== 'buzz' || g.answerLocked) return;
+  if (!g.buzzState) g.buzzState = { activePlayerId: null, deadline: null, excluded: [], timerId: null };
+  if (g.buzzState.excluded.indexOf(playerId) !== -1) return;
+  if (g.buzzState.activePlayerId != null) return;
+  g.buzzState.activePlayerId = playerId;
+  g.buzzState.deadline = Date.now() + GROUP_BUZZ_SECONDS * 1000;
+  g.buzzState.timerId = registerTimer(setInterval(tickBuzzCountdown, 250));
+  renderGroupQuestionArea();
+}
+function tickBuzzCountdown(){
+  const g = state.group;
+  if (!g || !g.buzzState || g.buzzState.activePlayerId == null) return;
+  const remainMs = g.buzzState.deadline - Date.now();
+  const el = document.querySelector('[data-testid="buzz-countdown"]');
+  if (el) el.textContent = Math.max(0, Math.ceil(remainMs / 1000));
+  if (remainMs <= 0) onBuzzTimeout();
+}
+function onBuzzTimeout(){
+  const g = state.group;
+  if (!g || !g.buzzState || g.buzzState.activePlayerId == null) return;
+  stopBuzzTimer();
+  g.buzzState.excluded.push(g.buzzState.activePlayerId);
+  g.buzzState.activePlayerId = null;
+  const q = g.questions[g.currentIndex];
+  if (g.buzzState.excluded.length >= g.players.length) {
+    showHint(q.word.h);
+    const t = setTimeout(advanceGroupQuestion, 1500);
+    registerTimer(t);
+  } else {
+    renderGroupQuestionArea();
+  }
+}
+function advanceGroupQuestion(){
+  const g = state.group;
+  if (!g) return;
+  g.answerLocked = false;
+  g.buzzState = null;
+  g.currentIndex += 1;
+  if (g.currentIndex >= g.questions.length) { finishGroupSession(); }
+  else { renderGroupQuestionArea(); }
+}
+function finishGroupSession(){
+  const g = state.group;
+  if (!g) return;
+  const durationSec = Math.round((Date.now() - g.startedAt) / 1000);
+  const record = {
+    id: 'g_' + Date.now(), createdAt: nowISO(), grade: g.grade, mode: g.mode,
+    islandIds: g.islandIds, questionsPerPlayer: g.questionsPerPlayer,
+    totalQuestions: g.questions.length, durationSec: durationSec,
+    players: g.players.map(function (p) {
+      return { name: p.name, theme: p.theme, team: p.team, score: p.score, vowelStats: p.vowelStats, wrongWords: p.wrongWords };
+    }),
+  };
+  state.groupSessions.push(record);
+  saveProfiles();
+  state.activeGroupSessionId = record.id;
+  state.groupResultReturnTo = 'profile';
+  state.group = null;
+  goToScreen('groupResult');
+}
+
+/* ===================== SECTION 27: SCREEN — GROUP SETUP WIZARD ===================== */
+function startGroupWizard(){
+  state.groupSetupDraft = {
+    grade: 'p1', playerCount: 2, playerNames: ['', ''],
+    mode: 'turn', islandIds: ISLANDS.map(function (isl) { return isl.id; }),
+    questionsPerPlayer: 2,
+  };
+  state.groupWizardStep = 1;
+  goToScreen('groupSetup');
+}
+function ensureGroupPlayerNamesLength(d){
+  while (d.playerNames.length < d.playerCount) d.playerNames.push('');
+  if (d.playerNames.length > d.playerCount) d.playerNames = d.playerNames.slice(0, d.playerCount);
+}
+function captureGroupWizardStep(){
+  if (state.groupWizardStep !== 3) return;
+  const d = state.groupSetupDraft;
+  const names = [];
+  for (let i = 0; i < d.playerCount; i++) {
+    const el = document.getElementById('wiz-name-' + i);
+    names.push(el ? el.value : (d.playerNames[i] || ''));
+  }
+  d.playerNames = names;
+}
+function setGroupDraftField(field, value){
+  state.groupSetupDraft[field] = value;
+  renderGroupSetupScreen();
+}
+function onGroupGradeChange(value){
+  const d = state.groupSetupDraft;
+  d.grade = value;
+  if (value === 'p1' && d.mode === 'buzz') d.mode = 'turn';
+  renderGroupSetupScreen();
+}
+function onGroupPlayerCountChange(delta){
+  const d = state.groupSetupDraft;
+  d.playerCount = Math.max(2, Math.min(6, d.playerCount + delta));
+  ensureGroupPlayerNamesLength(d);
+  renderGroupSetupScreen();
+}
+function goGroupWizardStep(delta){
+  captureGroupWizardStep();
+  const d = state.groupSetupDraft;
+  if (d.grade === 'p1' && d.mode === 'buzz') d.mode = 'turn';
+  state.groupWizardStep = Math.max(1, Math.min(6, state.groupWizardStep + delta));
+  renderGroupSetupScreen();
+}
+function onGroupWizardStartClick(){
+  captureGroupWizardStep();
+  const d = state.groupSetupDraft;
+  if (!d.islandIds.length) d.islandIds = ISLANDS.map(function (isl) { return isl.id; });
+  startGroupSession(d);
+}
+function estimateGroupMinutes(totalQuestions, mode){
+  const perQ = mode === 'buzz' ? 20 : 15;
+  return Math.max(1, Math.round((totalQuestions * perQ) / 60));
+}
+function buildWizardProgressDots(){
+  let html = '<div class="wizard-progress-dots">';
+  for (let i = 1; i <= 6; i++) {
+    html += '<div class="dot' + (i === state.groupWizardStep ? ' active' : '') + '"></div>';
+  }
+  return html + '</div>';
+}
+function buildWizardStep1(d){
+  return '' +
+    '<h3>ขั้นตอนที่ 1: ระดับชั้น</h3>' +
+    '<div class="choice-grid">' +
+      '<button class="choice-btn' + (d.grade === 'p1' ? ' is-selected' : '') + '" id="wiz-grade-p1" data-testid="wiz-grade-p1">🎒 ป.1</button>' +
+      '<button class="choice-btn' + (d.grade === 'p23' ? ' is-selected' : '') + '" id="wiz-grade-p23" data-testid="wiz-grade-p23">📚 ป.2–3</button>' +
+    '</div>';
+}
+function buildWizardStep2(d){
+  return '' +
+    '<h3>ขั้นตอนที่ 2: จำนวนผู้เล่น</h3>' +
+    '<div style="display:flex;align-items:center;justify-content:center;gap:18px">' +
+      '<button class="btn btn-secondary" id="wiz-count-minus" data-testid="wiz-count-minus" style="min-width:56px">➖</button>' +
+      '<div style="font-size:2.2rem;font-weight:800" data-testid="wiz-count-value">' + d.playerCount + ' คน</div>' +
+      '<button class="btn btn-secondary" id="wiz-count-plus" data-testid="wiz-count-plus" style="min-width:56px">➕</button>' +
+    '</div>';
+}
+function buildWizardStep3(d){
+  let rows = '';
+  for (let i = 0; i < d.playerCount; i++) {
+    const theme = GROUP_PLAYER_THEMES[i % GROUP_PLAYER_THEMES.length];
+    rows += '' +
+      '<div class="player-name-row">' +
+        '<div class="player-avatar-dot" style="background:' + theme.color + '">' + theme.emoji + '</div>' +
+        '<input type="text" id="wiz-name-' + i + '" data-testid="wiz-name-' + i + '" placeholder="ผู้เล่น ' + (i + 1) + '" value="' + escapeHtml(d.playerNames[i] || '') + '" style="flex:1">' +
+      '</div>';
+  }
+  return '<h3>ขั้นตอนที่ 3: ชื่อผู้เล่น</h3>' + rows;
+}
+function buildWizardStep4(d){
+  const buzzDisabled = d.grade === 'p1';
+  return '' +
+    '<h3>ขั้นตอนที่ 4: วิธีเล่น</h3>' +
+    '<div class="stack">' +
+      '<button class="choice-btn' + (d.mode === 'turn' ? ' is-selected' : '') + '" id="wiz-mode-turn" data-testid="wiz-mode-turn">🔄 ผลัดกันตอบ</button>' +
+      '<button class="choice-btn' + (d.mode === 'team' ? ' is-selected' : '') + '" id="wiz-mode-team" data-testid="wiz-mode-team">👫 แข่ง 2 ทีม</button>' +
+      '<button class="choice-btn' + (d.mode === 'buzz' ? ' is-selected' : '') + '" id="wiz-mode-buzz" data-testid="wiz-mode-buzz"' + (buzzDisabled ? ' disabled' : '') + '>⚡ ชิงกดตอบ' + (buzzDisabled ? ' (ปิดสำหรับ ป.1)' : '') + '</button>' +
+    '</div>';
+}
+function buildWizardStep5(d){
+  const items = ISLANDS.map(function (isl) {
+    const checked = d.islandIds.indexOf(isl.id) !== -1;
+    return '' +
+      '<label class="island-check-item' + (checked ? ' is-checked' : '') + '" data-testid="wiz-island-item-' + isl.id + '">' +
+        '<input type="checkbox" id="wiz-island-' + isl.id + '" data-island-id="' + isl.id + '"' + (checked ? ' checked' : '') + '>' +
+        '<span>' + ISLAND_ICONS[isl.id] + ' ' + escapeHtml(isl.island) + ' (' + escapeHtml(isl.vowel) + ')</span>' +
+      '</label>';
+  }).join('');
+  return '' +
+    '<h3>ขั้นตอนที่ 5: เลือกด่าน/สระ</h3>' +
+    '<button class="btn btn-secondary btn-block" id="wiz-island-all" data-testid="wiz-island-all">✅ เลือกทั้งหมด / ล้างทั้งหมด</button>' +
+    '<div class="island-check-grid" style="margin-top:10px">' + items + '</div>';
+}
+function buildWizardStep6(d){
+  const total = d.playerCount * d.questionsPerPlayer;
+  const minutes = estimateGroupMinutes(total, d.mode);
+  return '' +
+    '<h3>ขั้นตอนที่ 6: จำนวนข้อ/คน</h3>' +
+    '<div class="choice-grid">' +
+      [2, 3, 4].map(function (n) {
+        return '<button class="choice-btn' + (d.questionsPerPlayer === n ? ' is-selected' : '') + '" data-testid="wiz-qpp-' + n + '" data-qpp="' + n + '">' + n + ' ข้อ/คน</button>';
+      }).join('') +
+    '</div>' +
+    '<p class="subtitle center" style="margin-top:14px">รวมทั้งหมด ' + total + ' ข้อ · ใช้เวลาประมาณ ' + minutes + ' นาที</p>';
+}
+function renderGroupSetupScreen(){
+  const root = document.getElementById('app');
+  const d = state.groupSetupDraft;
+  const step = state.groupWizardStep;
+  let body = '';
+  if (step === 1) body = buildWizardStep1(d);
+  else if (step === 2) body = buildWizardStep2(d);
+  else if (step === 3) body = buildWizardStep3(d);
+  else if (step === 4) body = buildWizardStep4(d);
+  else if (step === 5) body = buildWizardStep5(d);
+  else body = buildWizardStep6(d);
+
+  const isLast = step === 6;
+  root.innerHTML = '' +
+    '<div data-testid="screen-groupSetup" class="stack">' +
+      '<div class="title-row"><div><div class="app-title">👥 โหมดเล่นกลุ่ม</div><div class="subtitle">ตั้งค่าก่อนเริ่มเล่น</div></div></div>' +
+      buildWizardProgressDots() +
+      '<div class="card stack" data-testid="wizard-step-body">' + body + '</div>' +
+      '<div class="wizard-nav">' +
+        (step > 1 ? '<button class="btn btn-secondary btn-block" id="wiz-back" data-testid="wiz-back">🔙 ย้อนกลับ</button>' : '<button class="btn btn-secondary btn-block" id="wiz-exit" data-testid="wiz-exit">🔙 ยกเลิก</button>') +
+        (isLast
+          ? '<button class="btn btn-block" id="wiz-start" data-testid="wiz-start">🎮 เริ่มเล่น</button>'
+          : '<button class="btn btn-block" id="wiz-next" data-testid="wiz-next">ถัดไป ➡️</button>') +
+      '</div>' +
+    '</div>';
+
+  attachGroupSetupHandlers();
+}
+function attachGroupSetupHandlers(){
+  const d = state.groupSetupDraft;
+  const step = state.groupWizardStep;
+
+  if (step === 1) {
+    const p1 = document.getElementById('wiz-grade-p1');
+    const p23 = document.getElementById('wiz-grade-p23');
+    if (p1) p1.addEventListener('click', function () { onGroupGradeChange('p1'); });
+    if (p23) p23.addEventListener('click', function () { onGroupGradeChange('p23'); });
+  } else if (step === 2) {
+    const minus = document.getElementById('wiz-count-minus');
+    const plus = document.getElementById('wiz-count-plus');
+    if (minus) minus.addEventListener('click', function () { onGroupPlayerCountChange(-1); });
+    if (plus) plus.addEventListener('click', function () { onGroupPlayerCountChange(1); });
+  } else if (step === 4) {
+    const turn = document.getElementById('wiz-mode-turn');
+    const team = document.getElementById('wiz-mode-team');
+    const buzz = document.getElementById('wiz-mode-buzz');
+    if (turn) turn.addEventListener('click', function () { setGroupDraftField('mode', 'turn'); });
+    if (team) team.addEventListener('click', function () { setGroupDraftField('mode', 'team'); });
+    if (buzz && !buzz.disabled) buzz.addEventListener('click', function () { setGroupDraftField('mode', 'buzz'); });
+  } else if (step === 5) {
+    document.querySelectorAll('.island-check-item input[type=checkbox]').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        const islandId = parseInt(cb.getAttribute('data-island-id'), 10);
+        const idx = d.islandIds.indexOf(islandId);
+        if (cb.checked && idx === -1) d.islandIds.push(islandId);
+        if (!cb.checked && idx !== -1) d.islandIds.splice(idx, 1);
+        const item = cb.closest('.island-check-item');
+        if (item) item.classList.toggle('is-checked', cb.checked);
+      });
+    });
+    const allBtn = document.getElementById('wiz-island-all');
+    if (allBtn) allBtn.addEventListener('click', function () {
+      const allIds = ISLANDS.map(function (isl) { return isl.id; });
+      d.islandIds = (d.islandIds.length === allIds.length) ? [] : allIds;
+      renderGroupSetupScreen();
+    });
+  } else if (step === 6) {
+    document.querySelectorAll('[data-qpp]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setGroupDraftField('questionsPerPlayer', parseInt(btn.getAttribute('data-qpp'), 10)); });
+    });
+  }
+
+  const backBtn = document.getElementById('wiz-back');
+  if (backBtn) backBtn.addEventListener('click', function () { goGroupWizardStep(-1); });
+  const nextBtn = document.getElementById('wiz-next');
+  if (nextBtn) nextBtn.addEventListener('click', function () { goGroupWizardStep(1); });
+  const exitBtn = document.getElementById('wiz-exit');
+  if (exitBtn) exitBtn.addEventListener('click', function () { state.groupSetupDraft = null; goToScreen('profile'); });
+  const startBtn = document.getElementById('wiz-start');
+  if (startBtn) startBtn.addEventListener('click', onGroupWizardStartClick);
+}
+
+/* ===================== SECTION 28: SCREEN — GROUP GAME ===================== */
+function cleanupGroupGameScreen(){
+  if (state.group) {
+    state.group.answerLocked = false;
+    stopBuzzTimer();
+  }
+}
+function buildGroupScoreHeaderHtml(){
+  const g = state.group;
+  if (g.mode === 'team') {
+    const redScore = g.players.filter(function (p) { return p.team === 'red'; }).reduce(function (s, p) { return s + p.score; }, 0);
+    const blueScore = g.players.filter(function (p) { return p.team === 'blue'; }).reduce(function (s, p) { return s + p.score; }, 0);
+    return '' +
+      '<div class="team-score-banner" data-testid="team-score-banner">' +
+        '<div class="team-col team-red">🔴 แดง ' + redScore + '</div>' +
+        '<div class="team-col team-blue">🔵 น้ำเงิน ' + blueScore + '</div>' +
+      '</div>';
+  }
+  return '' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center" data-testid="player-score-row">' +
+      g.players.map(function (p) {
+        return '<span class="error-chip" style="background:' + p.theme.color + ';color:#fff">' + p.theme.emoji + ' ' + escapeHtml(p.name) + ' ' + p.score + '</span>';
+      }).join('') +
+    '</div>';
+}
+function buildGroupModeControlsHtml(){
+  const g = state.group;
+  if (g.mode === 'buzz') {
+    const excluded = (g.buzzState && g.buzzState.excluded) || [];
+    const activeId = g.buzzState ? g.buzzState.activePlayerId : null;
+    const remain = (g.buzzState && g.buzzState.deadline) ? Math.max(0, Math.ceil((g.buzzState.deadline - Date.now()) / 1000)) : GROUP_BUZZ_SECONDS;
+    return '' +
+      (activeId != null
+        ? '<div class="buzz-countdown">⏱️ <span data-testid="buzz-countdown">' + remain + '</span> วิ — ตาของ ' + escapeHtml(g.players[activeId].name) + '</div>'
+        : '<p class="subtitle center">🔔 กดปุ่มสีของตัวเองก่อน ถึงจะตอบได้</p>') +
+      '<div class="buzz-grid" data-testid="buzz-grid">' +
+        g.players.map(function (p) {
+          const isExcluded = excluded.indexOf(p.id) !== -1;
+          const disabled = isExcluded || activeId != null;
+          return '<button class="buzz-btn" data-testid="buzz-btn-' + p.id + '" data-player-id="' + p.id + '" style="background:' + p.theme.color + '"' + (disabled ? ' disabled' : '') + '><span class="emoji">' + p.theme.emoji + '</span><span>' + escapeHtml(p.name) + '</span></button>';
+        }).join('') +
+      '</div>';
+  }
+  const player = currentGroupPlayer();
+  if (!player) return '';
+  return '' +
+    '<div class="center"><span class="group-player-badge" data-testid="current-player-badge">' +
+      '<span class="swatch" style="background:' + player.theme.color + '">' + player.theme.emoji + '</span>' +
+      'ตาของ ' + escapeHtml(player.name) +
+    '</span></div>';
+}
+function renderGroupQuestionArea(){
+  const g = state.group;
+  if (!g) return;
+  const q = g.questions[g.currentIndex];
+  const qArea = document.getElementById('group-question-area');
+  const controlsArea = document.getElementById('group-mode-controls');
+  const scoreArea = document.getElementById('group-score-header');
+  const progressEl = document.querySelector('[data-testid="group-progress-bar"]');
+  if (scoreArea) scoreArea.innerHTML = buildGroupScoreHeaderHtml();
+  if (progressEl) progressEl.textContent = 'ข้อ ' + (g.currentIndex + 1) + '/' + g.questions.length;
+  if (qArea) qArea.innerHTML = engines[q.type].renderQuestion(q);
+  if (controlsArea) controlsArea.innerHTML = buildGroupModeControlsHtml();
+
+  document.querySelectorAll('#group-question-area .option-btn').forEach(function (btn, i) {
+    btn.addEventListener('click', function () { submitGroupAnswer(q.options[i]); });
+  });
+  const speakBtn = document.querySelector('#group-question-area .speak-btn');
+  if (speakBtn) speakBtn.addEventListener('click', function () { speakWord(q.word.w); });
+  document.querySelectorAll('#group-question-area [data-speak-opt]').forEach(function (icon) {
+    icon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      speakWord(icon.parentElement.getAttribute('data-word'));
+    });
+  });
+  refreshSpeakButtonsVisibility();
+
+  if (g.mode === 'buzz') {
+    document.querySelectorAll('.buzz-btn[data-player-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () { onPlayerBuzz(parseInt(btn.getAttribute('data-player-id'), 10)); });
+    });
+  }
+}
+function renderGroupGameScreen(){
+  const root = document.getElementById('app');
+  const g = state.group;
+  if (!g) { goToScreen('profile'); return; }
+  root.innerHTML = '' +
+    '<div data-testid="screen-groupGame" class="stack">' +
+      '<div class="title-row" style="justify-content:space-between">' +
+        '<span data-testid="group-progress-bar" style="font-size:.8rem;color:var(--ink-soft)">ข้อ 1/' + g.questions.length + '</span>' +
+      '</div>' +
+      '<div id="group-score-header"></div>' +
+      '<div class="stage" id="group-game-stage">' +
+        '<div id="group-question-area" data-testid="group-question-area"></div>' +
+        '<div class="hint-area" data-testid="hint-area"></div>' +
+        '<div id="group-mode-controls" data-testid="group-mode-controls"></div>' +
+        '<div class="parrot-wrap" id="parrot-mascot">' + parrotSVG('idle') + '</div>' +
+      '</div>' +
+    '</div>';
+  renderGroupQuestionArea();
+}
+
+/* ===================== SECTION 29: SCREEN — GROUP RESULT + EXPORT ===================== */
+function computeGroupPlayerLevel(accuracyPct){
+  if (accuracyPct >= 80) return 'ดีมาก';
+  if (accuracyPct >= 70) return 'ดี';
+  if (accuracyPct >= 60) return 'พอใช้';
+  return 'ควรทบทวน';
+}
+function computeGroupPlayerAccuracy(player){
+  const stats = player.vowelStats || {};
+  let ok = 0, n = 0;
+  Object.keys(stats).forEach(function (k) { ok += stats[k].ok; n += stats[k].n; });
+  return { ok: ok, n: n, pct: n > 0 ? Math.round((ok / n) * 100) : 0 };
+}
+function computeGroupWeakVowels(player){
+  const stats = player.vowelStats || {};
+  return Object.keys(stats).filter(function (k) {
+    const s = stats[k];
+    return s.n > 0 && (s.ok / s.n) * 100 < 60;
+  });
+}
+function groupModeLabel(mode){
+  return mode === 'turn' ? 'ผลัดกันตอบ' : (mode === 'team' ? 'แข่ง 2 ทีม' : 'ชิงกดตอบ');
+}
+function groupGradeLabel(grade){
+  return grade === 'p1' ? 'ป.1' : 'ป.2-3';
+}
+function renderGroupResultScreen(){
+  const root = document.getElementById('app');
+  const session = state.groupSessions.filter(function (s) { return s.id === state.activeGroupSessionId; })[0];
+  if (!session) { goToScreen('profile'); return; }
+
+  const ranked = session.players.slice().sort(function (a, b) { return b.score - a.score; });
+  const rankHtml = ranked.map(function (p, i) {
+    return '' +
+      '<div class="group-rank-row" data-testid="group-rank-row-' + i + '">' +
+        '<span class="rank-num">' + (i + 1) + '</span>' +
+        '<span class="swatch" style="background:' + p.theme.color + ';width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center">' + p.theme.emoji + '</span>' +
+        '<span>' + escapeHtml(p.name) + (p.team ? (' (' + (p.team === 'red' ? '🔴 แดง' : '🔵 น้ำเงิน') + ')') : '') + '</span>' +
+        '<span class="score">' + p.score + ' คะแนน</span>' +
+      '</div>';
+  }).join('');
+
+  let teamBannerHtml = '';
+  if (session.mode === 'team') {
+    const redScore = session.players.filter(function (p) { return p.team === 'red'; }).reduce(function (s, p) { return s + p.score; }, 0);
+    const blueScore = session.players.filter(function (p) { return p.team === 'blue'; }).reduce(function (s, p) { return s + p.score; }, 0);
+    teamBannerHtml = '' +
+      '<div class="team-score-banner" data-testid="team-result-banner">' +
+        '<div class="team-col team-red">🔴 แดง ' + redScore + '</div>' +
+        '<div class="team-col team-blue">🔵 น้ำเงิน ' + blueScore + '</div>' +
+      '</div>';
+  }
+
+  const rowsHtml = session.players.map(function (p) {
+    const acc = computeGroupPlayerAccuracy(p);
+    const level = computeGroupPlayerLevel(acc.pct);
+    const weak = computeGroupWeakVowels(p);
+    return '<tr>' +
+      '<td>' + p.theme.emoji + ' ' + escapeHtml(p.name) + '</td>' +
+      '<td>' + p.score + '</td><td>' + acc.n + '</td><td>' + acc.ok + '</td><td>' + acc.pct + '%</td>' +
+      '<td>' + level + '</td>' +
+      '<td>' + (weak.length ? escapeHtml(weak.join(', ')) : '-') + '</td>' +
+      '<td>' + (p.wrongWords.length ? escapeHtml(p.wrongWords.join(', ')) : '-') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  root.innerHTML = '' +
+    '<div data-testid="screen-groupResult" class="stack">' +
+      '<div class="center"><div class="app-title">🏁 สรุปผลโหมดกลุ่ม</div>' +
+        '<div class="subtitle">' + groupModeLabel(session.mode) + ' · ' + groupGradeLabel(session.grade) + ' · ' + session.totalQuestions + ' ข้อ · ' + formatDuration(session.durationSec) + ' นาที</div></div>' +
+      teamBannerHtml +
+      '<div class="stack" data-testid="group-rank-list">' + rankHtml + '</div>' +
+      '<p class="subtitle" style="text-align:center">อ้างอิงตัวชี้วัดหลักสูตร ท 4.1 ป.1/1 และ ท 1.1 ป.1/1</p>' +
+      '<div class="table-scroll"><table class="summary-table" data-testid="group-result-table">' +
+        '<thead><tr><th>ชื่อ</th><th>คะแนน</th><th>ข้อที่ตอบ</th><th>ถูกครั้งแรก</th><th>ความแม่นยำ</th><th>ระดับ</th><th>สระที่ควรทบทวน</th><th>คำที่ตอบผิด</th></tr></thead>' +
+        '<tbody>' + rowsHtml + '</tbody>' +
+      '</table></div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-secondary btn-block" id="btn-group-export-csv" data-testid="btn-group-export-csv">📄 ส่งออก CSV</button>' +
+        '<button class="btn btn-secondary btn-block" id="btn-group-export-png" data-testid="btn-group-export-png">🖼️ บันทึกภาพ</button>' +
+      '</div>' +
+      '<button class="btn btn-block" id="btn-group-result-back" data-testid="btn-group-result-back">🔙 กลับ</button>' +
+    '</div>';
+
+  document.getElementById('btn-group-export-csv').addEventListener('click', function () { exportGroupSessionCSV(session.id); });
+  document.getElementById('btn-group-export-png').addEventListener('click', function () { exportGroupSessionPNG(session.id); });
+  document.getElementById('btn-group-result-back').addEventListener('click', function () {
+    goToScreen(state.groupResultReturnTo === 'teacher' ? 'teacher' : 'profile');
+  });
+}
+const GROUP_CSV_HEADER = ['ชื่อ', 'ทีม', 'คะแนน', 'ข้อที่ตอบ', 'ถูกครั้งแรก', 'ความแม่นยำ', 'ระดับ',
+  'สระที่ควรทบทวน', 'คำที่ตอบผิด', 'รูปแบบ', 'ระดับชั้น', 'จำนวนข้อ', 'วันเวลา'];
+function buildGroupCsvRow(session, player){
+  const acc = computeGroupPlayerAccuracy(player);
+  const level = computeGroupPlayerLevel(acc.pct);
+  const weak = computeGroupWeakVowels(player);
+  return [
+    player.name, player.team === 'red' ? 'แดง' : (player.team === 'blue' ? 'น้ำเงิน' : '-'),
+    player.score, acc.n, acc.ok, acc.pct + '%', level,
+    weak.length ? weak.join('; ') : '-', player.wrongWords.length ? player.wrongWords.join('; ') : '-',
+    groupModeLabel(session.mode), groupGradeLabel(session.grade), session.totalQuestions, session.createdAt,
+  ];
+}
+function exportGroupSessionCSV(sessionId){
+  const session = state.groupSessions.filter(function (s) { return s.id === sessionId; })[0];
+  if (!session) return;
+  const rows = [GROUP_CSV_HEADER];
+  session.players.forEach(function (p) { rows.push(buildGroupCsvRow(session, p)); });
+  downloadCsv('group_' + sessionId + '.csv', rows);
+}
+function exportGroupSessionPNG(sessionId){
+  try {
+    const session = state.groupSessions.filter(function (s) { return s.id === sessionId; })[0];
+    if (!session) return;
+    const ranked = session.players.slice().sort(function (a, b) { return b.score - a.score; });
+    const canvas = document.createElement('canvas');
+    canvas.width = 720; canvas.height = 960;
+    const ctx = canvas.getContext('2d');
+    const font = "'Sarabun','Noto Sans Thai','Leelawadee UI','Tahoma',sans-serif";
+    ctx.fillStyle = '#FFF6DE';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#15304C';
+    ctx.textAlign = 'left';
+    let y = 60;
+    ctx.font = '700 34px ' + font;
+    ctx.fillText('สรุปผลโหมดเล่นกลุ่ม', 40, y); y += 44;
+    ctx.font = '400 22px ' + font;
+    ctx.fillText(groupModeLabel(session.mode) + ' · ' + groupGradeLabel(session.grade) + ' · ' + session.totalQuestions + ' ข้อ', 40, y); y += 34;
+    ctx.fillText('เวลารวม: ' + formatDuration(session.durationSec) + ' นาที', 40, y); y += 50;
+
+    ctx.font = '700 26px ' + font;
+    ctx.fillText('อันดับคะแนน', 40, y); y += 38;
+    ctx.font = '400 22px ' + font;
+    ranked.forEach(function (p, i) {
+      const line = (i + 1) + '. ' + p.theme.emoji + ' ' + p.name + ' — ' + p.score + ' คะแนน';
+      ctx.fillText(line, 40, y); y += 32;
+    });
+    y += 10;
+
+    ctx.font = '700 24px ' + font;
+    ctx.fillText('ความแม่นยำรายบุคคล', 40, y); y += 32;
+    ctx.font = '400 20px ' + font;
+    session.players.forEach(function (p) {
+      const acc = computeGroupPlayerAccuracy(p);
+      const line = p.name + ': ' + acc.pct + '% (' + computeGroupPlayerLevel(acc.pct) + ')';
+      ctx.fillText(line, 40, y); y += 28;
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = sessionId + '_group.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) { /* ห้ามให้แอปพัง */ }
+}
+
+/* ===================== SECTION 31: TRACE ZONE — CANVAS GRADING ENGINE ===================== */
+const TRACE_FONT = "'Sarabun','Noto Sans Thai','Leelawadee UI','Tahoma',sans-serif";
+let traceStrokes = [];
+let traceActiveStroke = null;
+let traceCanvasEl = null;
+let traceCtx = null;
+
+function traceFitFont(ctx, text, maxWidth){
+  let size = 130;
+  ctx.font = '700 ' + size + 'px ' + TRACE_FONT;
+  while (size > 40 && ctx.measureText(text).width > maxWidth) {
+    size -= 6;
+    ctx.font = '700 ' + size + 'px ' + TRACE_FONT;
+  }
+  return size;
+}
+function drawTraceGlyphFill(ctx, text, w, h, fillStyle){
+  ctx.clearRect(0, 0, w, h);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const size = traceFitFont(ctx, text, w - 40);
+  ctx.font = '700 ' + size + 'px ' + TRACE_FONT;
+  ctx.fillStyle = fillStyle;
+  ctx.fillText(text, w / 2, h / 2);
+  return size;
+}
+function drawTraceGuideVisible(ctx, text){
+  const size = drawTraceGlyphFill(ctx, text, TRACE_CANVAS_W, TRACE_CANVAS_H, 'rgba(21,48,76,.16)');
+  ctx.font = '700 ' + size + 'px ' + TRACE_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.setLineDash([8, 7]);
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(21,48,76,.32)';
+  ctx.strokeText(text, TRACE_CANVAS_W / 2, TRACE_CANVAS_H / 2);
+  ctx.setLineDash([]);
+}
+function traceDrawStrokesOnCtx(ctx, strokes, lineWidth, strokeStyle){
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = strokeStyle;
+  strokes.forEach(function (stroke) {
+    if (!stroke || stroke.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
+    ctx.stroke();
+  });
+}
+function computeTraceScore(strokes, text){
+  const w = TRACE_CANVAS_W, h = TRACE_CANVAS_H;
+  const coreCanvas = document.createElement('canvas'); coreCanvas.width = w; coreCanvas.height = h;
+  const zoneCanvas = document.createElement('canvas'); zoneCanvas.width = w; zoneCanvas.height = h;
+  const userCanvas = document.createElement('canvas'); userCanvas.width = w; userCanvas.height = h;
+  const coreCtx = coreCanvas.getContext('2d');
+  const zoneCtx = zoneCanvas.getContext('2d');
+  const userCtx = userCanvas.getContext('2d');
+
+  drawTraceGlyphFill(coreCtx, text, w, h, '#000');
+
+  const zoneSize = drawTraceGlyphFill(zoneCtx, text, w, h, '#000');
+  zoneCtx.font = '700 ' + zoneSize + 'px ' + TRACE_FONT;
+  zoneCtx.textAlign = 'center';
+  zoneCtx.textBaseline = 'middle';
+  zoneCtx.lineWidth = T_TOL;
+  zoneCtx.strokeStyle = '#000';
+  zoneCtx.strokeText(text, w / 2, h / 2);
+
+  traceDrawStrokesOnCtx(userCtx, strokes, T_PEN, '#000');
+
+  const coreData = coreCtx.getImageData(0, 0, w, h).data;
+  const zoneData = zoneCtx.getImageData(0, 0, w, h).data;
+  const userData = userCtx.getImageData(0, 0, w, h).data;
+
+  let coreOn = 0, interCoreUser = 0, userOn = 0, interUserZone = 0;
+  for (let i = 3; i < coreData.length; i += 4) {
+    const coreHit = coreData[i] > 10;
+    const zoneHit = zoneData[i] > 10;
+    const userHit = userData[i] > 10;
+    if (coreHit) { coreOn++; if (userHit) interCoreUser++; }
+    if (userHit) { userOn++; if (zoneHit) interUserZone++; }
+  }
+  const coverage = coreOn > 0 ? interCoreUser / coreOn : 0;
+  const accuracy = userOn > 0 ? interUserZone / userOn : 0;
+  const score = coverage * 0.6 + accuracy * 0.4;
+  return { coverage: coverage, accuracy: accuracy, score: score };
+}
+function starsFromTraceScore(score, accuracy){
+  let stars = score >= 0.75 ? 3 : score >= 0.55 ? 2 : score >= 0.35 ? 1 : 0;
+  if (accuracy < 0.30) stars = 0;
+  else if (accuracy < 0.45) stars = Math.min(stars, 1);
+  else if (accuracy < 0.60) stars = Math.min(stars, 2);
+  return stars;
+}
+function computeTraceSummary(profile){
+  const trace = profile.trace || {};
+  const keys = Object.keys(trace).filter(function (v) { return trace[v].tries > 0; });
+  const done = keys.length;
+  const avgAccuracyPct = done > 0 ? Math.round(
+    (keys.reduce(function (sum, v) { return sum + trace[v].best.accuracy; }, 0) / done) * 100
+  ) : null;
+  const weakVowelList = keys.filter(function (v) { return trace[v].best.accuracy < 0.6; });
+  return { done: done, avgAccuracyPct: avgAccuracyPct, weakVowels: weakVowelList.join('; '), weakVowelList: weakVowelList };
+}
+
+/* ===================== SECTION 32: SCREEN — TRACE MENU + TRACE WRITE ===================== */
+function renderTraceMenuScreen(){
+  const root = document.getElementById('app');
+  const profile = state.profiles[state.activeProfileKey];
+  if (!profile.trace) profile.trace = {};
+  const vowelBtnsHtml = TRACE_VOWELS.map(function (item, i) {
+    const rec = profile.trace[item.v];
+    const stars = rec ? rec.best.stars : 0;
+    return '' +
+      '<button class="trace-vowel-btn" data-testid="trace-vowel-' + i + '" data-index="' + i + '">' +
+        '<span class="trace-vowel-text">' + escapeHtml(item.v) + '</span>' +
+        '<span class="trace-vowel-stars">' + '⭐'.repeat(stars) + '☆'.repeat(3 - stars) + '</span>' +
+      '</button>';
+  }).join('');
+  root.innerHTML = '' +
+    '<div data-testid="screen-trace" class="stack">' +
+      '<div class="center"><div class="app-title">✍️ โซนฝึกเขียนสระ</div><div class="subtitle">เลือกสระที่จะฝึกเขียน</div></div>' +
+      '<div class="trace-vowel-grid">' + vowelBtnsHtml + '</div>' +
+      '<button class="btn btn-block" data-testid="btn-trace-back-map" id="btn-trace-back-map">🔙 กลับแผนที่</button>' +
+    '</div>';
+  document.querySelectorAll('.trace-vowel-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.traceIndex = Number(btn.getAttribute('data-index'));
+      goToScreen('traceWrite');
+    });
+  });
+  document.getElementById('btn-trace-back-map').addEventListener('click', function () { goToScreen('map'); });
+}
+function cleanupTraceWriteScreen(){
+  traceStrokes = [];
+  traceActiveStroke = null;
+  traceCanvasEl = null;
+  traceCtx = null;
+}
+function traceRedraw(){
+  if (!traceCtx) return;
+  const vowel = TRACE_VOWELS[state.traceIndex];
+  drawTraceGuideVisible(traceCtx, vowel.v);
+  traceDrawStrokesOnCtx(traceCtx, traceStrokes, T_PEN, '#D96A1F');
+}
+function tracePointFromEvent(e){
+  const rect = traceCanvasEl.getBoundingClientRect();
+  const scaleX = TRACE_CANVAS_W / rect.width;
+  const scaleY = TRACE_CANVAS_H / rect.height;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+function onTracePointerDown(e){
+  if (!traceCanvasEl) return;
+  e.preventDefault();
+  try { traceCanvasEl.setPointerCapture(e.pointerId); } catch (err) {}
+  traceActiveStroke = [tracePointFromEvent(e)];
+  traceStrokes.push(traceActiveStroke);
+  traceRedraw();
+}
+function onTracePointerMove(e){
+  if (!traceActiveStroke) return;
+  e.preventDefault();
+  traceActiveStroke.push(tracePointFromEvent(e));
+  traceRedraw();
+}
+function onTracePointerUp(){
+  traceActiveStroke = null;
+}
+function onTraceClearClick(){
+  traceStrokes = [];
+  traceActiveStroke = null;
+  traceRedraw();
+  const starsEl = document.querySelector('[data-testid="trace-stars"]');
+  if (starsEl) starsEl.textContent = '';
+  const warnEl = document.querySelector('[data-testid="trace-warning"]');
+  if (warnEl) warnEl.style.display = 'none';
+  showHint('');
+}
+function onTraceCheckClick(){
+  const warnEl = document.querySelector('[data-testid="trace-warning"]');
+  const starsEl = document.querySelector('[data-testid="trace-stars"]');
+  const hasStroke = traceStrokes.some(function (s) { return s && s.length >= 2; });
+  if (!hasStroke) {
+    if (warnEl) { warnEl.textContent = '✏️ ลากนิ้ววาดตามรอยก่อนนะ'; warnEl.style.display = 'block'; }
+    if (starsEl) starsEl.textContent = '';
+    return;
+  }
+  if (warnEl) warnEl.style.display = 'none';
+  const vowel = TRACE_VOWELS[state.traceIndex];
+  const result = computeTraceScore(traceStrokes, vowel.v);
+  const stars = starsFromTraceScore(result.score, result.accuracy);
+  const profile = state.profiles[state.activeProfileKey];
+  if (!profile.trace) profile.trace = {};
+  if (!profile.trace[vowel.v]) {
+    profile.trace[vowel.v] = { tries: 0, best: { stars:0, score:0, coverage:0, accuracy:0 }, last: null };
+  }
+  const rec = profile.trace[vowel.v];
+  rec.tries += 1;
+  rec.last = { stars: stars, score: result.score, coverage: result.coverage, accuracy: result.accuracy, at: nowISO() };
+  if (result.score > rec.best.score) rec.best = { stars: stars, score: result.score, coverage: result.coverage, accuracy: result.accuracy };
+  saveProfiles();
+
+  if (starsEl) starsEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  if (stars >= 2) {
+    bounceParrot('happy');
+    spawnConfetti(document.querySelector('.stage'));
+    showPraiseMessage();
+    showHint('');
+  } else {
+    bounceParrot('sad');
+    showHint('ลองลากให้ทับเส้นและอยู่ในกรอบดูใหม่นะ');
+  }
+}
+function onTraceNextClick(){
+  state.traceIndex += 1;
+  if (state.traceIndex >= TRACE_VOWELS.length) {
+    state.traceIndex = 0;
+    goToScreen('trace');
+  } else {
+    goToScreen('traceWrite');
+  }
+}
+function renderTraceWriteScreen(){
+  const root = document.getElementById('app');
+  const idx = state.traceIndex;
+  const vowel = TRACE_VOWELS[idx];
+  root.innerHTML = '' +
+    '<div data-testid="screen-trace-write" class="stack">' +
+      '<div class="center"><div class="app-title">สระที่ ' + (idx + 1) + ' จาก ' + TRACE_VOWELS.length + '</div>' +
+        '<div class="subtitle">คำตัวอย่าง: ' + escapeHtml(vowel.w) + ' ' + vowel.e + '</div></div>' +
+      '<div class="stage">' +
+        '<div class="parrot-wrap" id="parrot-mascot">' + parrotSVG('idle') + '</div>' +
+        '<div class="trace-canvas-wrap">' +
+          '<canvas id="trace-canvas" data-testid="trace-canvas" width="' + TRACE_CANVAS_W + '" height="' + TRACE_CANVAS_H + '"></canvas>' +
+        '</div>' +
+        '<div class="trace-stars" data-testid="trace-stars"></div>' +
+        '<div class="trace-warning" data-testid="trace-warning" style="display:none"></div>' +
+        '<div class="hint-area" data-testid="hint-area"></div>' +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-secondary" data-testid="btn-trace-clear" id="btn-trace-clear">🧽 ลบ</button>' +
+        '<button class="btn btn-success" data-testid="btn-trace-check" id="btn-trace-check">✅ ตรวจ</button>' +
+        '<button class="btn" data-testid="btn-trace-next" id="btn-trace-next">➡️ ถัดไป</button>' +
+      '</div>' +
+      '<button class="btn btn-secondary btn-block" data-testid="btn-trace-back-menu" id="btn-trace-back-menu">🔙 กลับเมนูสระ</button>' +
+    '</div>';
+
+  traceCanvasEl = document.getElementById('trace-canvas');
+  traceCtx = traceCanvasEl.getContext('2d');
+  traceRedraw();
+
+  traceCanvasEl.addEventListener('pointerdown', onTracePointerDown);
+  traceCanvasEl.addEventListener('pointermove', onTracePointerMove);
+  traceCanvasEl.addEventListener('pointerup', onTracePointerUp);
+  traceCanvasEl.addEventListener('pointercancel', onTracePointerUp);
+  document.getElementById('btn-trace-clear').addEventListener('click', onTraceClearClick);
+  document.getElementById('btn-trace-check').addEventListener('click', onTraceCheckClick);
+  document.getElementById('btn-trace-next').addEventListener('click', onTraceNextClick);
+  document.getElementById('btn-trace-back-menu').addEventListener('click', function () { goToScreen('trace'); });
+
+  speakWord(vowel.v);
+}
+
+/* ===================== SECTION 33: INIT ===================== */
+function initApp(){
+  state.storageAvailable = isStorageAvailable();
+  state.profiles = loadProfiles();
+  state.groupSessions = loadGroupSessions();
+  initSpeech();
+  document.addEventListener('pointerdown', unlockAudioOnce, { once: true });
+  goToScreen('profile');
+}
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
