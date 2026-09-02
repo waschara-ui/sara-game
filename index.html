@@ -62,6 +62,12 @@
   .profile-item .meta{font-size:.78rem;color:var(--ink-soft)}
   .error-text{color:var(--soft-warn);font-size:.82rem;font-weight:700;min-height:1.2em}
 
+  /* auth screen (สมัคร/ล็อกอินครู) */
+  .auth-form input[type=password]{font-size:1rem;letter-spacing:normal;text-align:left}
+  .auth-switch{background:none;border:none;color:var(--accent-dark);font-weight:700;font-size:.88rem;text-decoration:underline;cursor:pointer;padding:8px;min-height:44px}
+  .auth-note{background:#fff;border:2px dashed var(--ink-soft);border-radius:14px;padding:10px 12px;font-size:.78rem;color:var(--ink-soft);text-align:center}
+  .auth-pending{background:var(--card-alt);border-radius:16px;padding:14px;text-align:center;font-weight:700;font-size:.88rem}
+
   /* map screen */
   .island-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
   .island-btn{
@@ -262,6 +268,11 @@
 <div id="app" data-testid="app-root"></div>
 <div id="modal-root"></div>
 <div id="a11y-live" aria-live="polite" class="sr-only"></div>
+
+<!-- ข้อยกเว้นเฉพาะระบบบัญชีครู: โหลด Firebase SDK จาก CDN ทางการของ Google (ดูรายละเอียดใน CLAUDE.md) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <script>
 'use strict';
@@ -496,6 +507,12 @@ const state = {
   activeGroupSessionId: null,
   groupResultReturnTo: 'profile',
   traceIndex: 0,
+  teacherSession: null,
+  authMode: 'register',
+  authDraft: { name:'', school:'', email:'', password:'', confirmPassword:'' },
+  authError: '',
+  authNotice: '',
+  authBusy: false,
 };
 let currentScreenName = null;
 
@@ -580,6 +597,102 @@ function showStorageWarning(){
   const el = document.querySelector('[data-testid="storage-warning-banner"]');
   if (el) el.classList.remove('sr-only');
 }
+
+/* ===================== SECTION 5B: TEACHER AUTH (Firebase) =====================
+   ข้อยกเว้นเฉพาะส่วนนี้: อีเมล/รหัสผ่าน/ชื่อ/โรงเรียนของครูจะถูกส่งไปยัง Firebase
+   เพื่อสมัคร/ยืนยันตัวตนเท่านั้น — ข้อมูลนักเรียน (ชื่อ/คะแนน) ยังอยู่ใน localStorage
+   เท่านั้นเหมือนเดิมทุกกรณี (ดู CLAUDE.md หัวข้อ "ข้อยกเว้นสำหรับระบบบัญชีครู") */
+const firebaseConfig = {
+  apiKey: "AIzaSyDW7I_FqeJ6j36i85NBU2iSnMuYP1Fg-fg",
+  authDomain: "sara-game-teacher.firebaseapp.com",
+  projectId: "sara-game-teacher",
+  storageBucket: "sara-game-teacher.firebasestorage.app",
+  messagingSenderId: "689953710914",
+  appId: "1:689953710914:web:692d2cfbe1465ac5651edb"
+};
+let fbAuth = null, fbDb = null;
+try {
+  if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+  }
+} catch (e) { /* ออฟไลน์ หรือโหลด Firebase SDK ไม่สำเร็จ — จะแจ้งเตือนตอนสมัคร/ล็อกอิน */ }
+
+const TEACHER_SESSION_KEY = 'sara_teacher_session_v1';
+function loadTeacherSession(){
+  if (!state.storageAvailable) return null;
+  try {
+    const raw = localStorage.getItem(TEACHER_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    showStorageWarning();
+    return null;
+  }
+}
+function saveTeacherSession(session){
+  if (!state.storageAvailable) { showStorageWarning(); return; }
+  try {
+    localStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify(session));
+  } catch (e) {
+    state.storageAvailable = false;
+    showStorageWarning();
+  }
+}
+function clearTeacherSession(){
+  try { localStorage.removeItem(TEACHER_SESSION_KEY); } catch (e) {}
+}
+
+const AUTH_ERROR_MESSAGES = {
+  'auth/email-already-in-use': 'อีเมลนี้เคยสมัครไว้แล้ว ลองเข้าสู่ระบบแทนนะครับ',
+  'auth/invalid-email': 'รูปแบบอีเมลไม่ถูกต้อง',
+  'auth/weak-password': 'รหัสผ่านสั้นเกินไป (ต้องอย่างน้อย 6 ตัวอักษร)',
+  'auth/wrong-password': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  'auth/user-not-found': 'ไม่พบบัญชีนี้ กรุณาสมัครสมาชิกก่อนนะครับ',
+  'auth/invalid-credential': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  'auth/too-many-requests': 'ลองผิดหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
+  'auth/network-request-failed': 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้ กรุณาเชื่อมต่อเน็ตแล้วลองใหม่',
+};
+function translateAuthError(err){
+  return (err && AUTH_ERROR_MESSAGES[err.code]) || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+}
+
+function authRegister(email, password, name, school){
+  const mock = window.__TEST_API__ && window.__TEST_API__._mockAuthRegister;
+  if (mock) return mock(email, password, name, school);
+  if (!fbAuth || !fbDb) return Promise.reject({ code: 'auth/network-request-failed' });
+  return fbAuth.createUserWithEmailAndPassword(email, password).then(function (cred) {
+    return fbDb.collection('teachers').doc(cred.user.uid).set({
+      name: name, school: school, email: email, approved: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).then(function () { return fbAuth.signOut(); });
+  });
+}
+
+function authLogin(email, password){
+  const mock = window.__TEST_API__ && window.__TEST_API__._mockAuthLogin;
+  if (mock) return mock(email, password);
+  if (!fbAuth || !fbDb) return Promise.reject({ code: 'auth/network-request-failed' });
+  let uid = null;
+  return fbAuth.signInWithEmailAndPassword(email, password).then(function (cred) {
+    uid = cred.user.uid;
+    return fbDb.collection('teachers').doc(uid).get();
+  }).then(function (doc) {
+    const data = doc.exists ? doc.data() : null;
+    if (!data || data.approved !== true) {
+      return fbAuth.signOut().then(function () {
+        const e = new Error('pending');
+        e.pending = true;
+        throw e;
+      });
+    }
+    const session = { uid: uid, name: data.name, school: data.school, email: email };
+    saveTeacherSession(session);
+    state.teacherSession = session;
+    return session;
+  });
+}
+
 function defaultLevelState(){
   return { passed:false, bestScore:0, lastScore:0, medal:null,
            timesPlayed:0, lastDurationSec:0, bestDurationSec:0, totalTimeSec:0, wrongWords:[] };
@@ -826,6 +939,7 @@ function cleanupGameScreen(){
   }
 }
 const routes = {
+  auth:     { render: renderAuthScreen,     cleanup: null },
   profile:  { render: renderProfileScreen,  cleanup: null },
   map:      { render: renderMapScreen,      cleanup: null },
   game:     { render: renderGameScreen,     cleanup: cleanupGameScreen },
@@ -965,6 +1079,110 @@ function trophySVG(medal){
     '</svg>';
 }
 
+/* ===================== SECTION 11B: SCREEN — AUTH (สมัคร/ล็อกอินครู) ===================== */
+function buildAuthScreenHtml(){
+  const isRegister = state.authMode === 'register';
+  const d = state.authDraft;
+  const fields = isRegister ? ('' +
+    '<div class="field"><label for="auth-name">ชื่อครู</label><input type="text" id="auth-name" data-testid="auth-name" placeholder="เช่น ครูสมศรี" value="' + escapeHtml(d.name) + '"></div>' +
+    '<div class="field"><label for="auth-school">โรงเรียน</label><input type="text" id="auth-school" data-testid="auth-school" placeholder="เช่น โรงเรียนบ้านสวย" value="' + escapeHtml(d.school) + '"></div>' +
+    '<div class="field"><label for="auth-email">อีเมล</label><input type="text" id="auth-email" data-testid="auth-email" placeholder="เช่น teacher@email.com" value="' + escapeHtml(d.email) + '"></div>' +
+    '<div class="field"><label for="auth-password">รหัสผ่าน</label><input type="password" id="auth-password" data-testid="auth-password" placeholder="อย่างน้อย 6 ตัวอักษร" value="' + escapeHtml(d.password) + '"></div>' +
+    '<div class="field"><label for="auth-password2">ยืนยันรหัสผ่าน</label><input type="password" id="auth-password2" data-testid="auth-password2" value="' + escapeHtml(d.confirmPassword) + '"></div>'
+  ) : ('' +
+    '<div class="field"><label for="auth-email">อีเมล</label><input type="text" id="auth-email" data-testid="auth-email" placeholder="เช่น teacher@email.com" value="' + escapeHtml(d.email) + '"></div>' +
+    '<div class="field"><label for="auth-password">รหัสผ่าน</label><input type="password" id="auth-password" data-testid="auth-password" value="' + escapeHtml(d.password) + '"></div>'
+  );
+
+  return '' +
+    '<div data-testid="screen-auth" class="stack auth-form">' +
+      '<div class="title-row"><div><div class="app-title">🦜 เกาะสระวิเศษ</div><div class="subtitle">' + (isRegister ? 'สมัครสมาชิกครู' : 'เข้าสู่ระบบครู') + '</div></div></div>' +
+      '<div class="auth-note">🔒 ข้อมูลบัญชีครู (ชื่อ/โรงเรียน/อีเมล) จะถูกส่งไปยังระบบยืนยันตัวตนภายนอกเพื่อสมัคร/ล็อกอินเท่านั้น ส่วนข้อมูลนักเรียน (ชื่อ/คะแนน) ยังเก็บอยู่ในเครื่องนี้เท่านั้นเหมือนเดิม</div>' +
+      (state.authNotice ? '<div class="auth-pending" data-testid="auth-notice">' + escapeHtml(state.authNotice) + '</div>' : '') +
+      '<div class="card stack">' +
+        fields +
+        '<p class="error-text" id="auth-error" data-testid="auth-error">' + escapeHtml(state.authError) + '</p>' +
+        '<button class="btn btn-block" id="btn-auth-submit" data-testid="btn-auth-submit"' + (state.authBusy ? ' disabled' : '') + '>' +
+          (state.authBusy ? '⏳ กำลังดำเนินการ...' : (isRegister ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ')) +
+        '</button>' +
+      '</div>' +
+      '<button class="auth-switch" id="btn-auth-switch" data-testid="btn-auth-switch">' +
+        (isRegister ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกครู') +
+      '</button>' +
+    '</div>';
+}
+
+function renderAuthScreen(){
+  const root = document.getElementById('app');
+  renderPreservingInputs(root, buildAuthScreenHtml, ['auth-name', 'auth-school', 'auth-email', 'auth-password', 'auth-password2']);
+  attachAuthScreenHandlers();
+}
+
+function attachAuthScreenHandlers(){
+  const fieldMap = { 'auth-name':'name', 'auth-school':'school', 'auth-email':'email', 'auth-password':'password', 'auth-password2':'confirmPassword' };
+  Object.keys(fieldMap).forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', function (e) { state.authDraft[fieldMap[id]] = e.target.value; });
+  });
+  const switchBtn = document.getElementById('btn-auth-switch');
+  if (switchBtn) switchBtn.addEventListener('click', function () {
+    state.authMode = state.authMode === 'register' ? 'login' : 'register';
+    state.authError = '';
+    state.authNotice = '';
+    goToScreen('auth');
+  });
+  const submitBtn = document.getElementById('btn-auth-submit');
+  if (submitBtn) submitBtn.addEventListener('click', onAuthSubmit);
+}
+
+function onAuthSubmit(){
+  if (state.authBusy) return;
+  const d = state.authDraft;
+  const email = (d.email || '').trim();
+  const password = d.password || '';
+  state.authError = '';
+
+  if (state.authMode === 'register') {
+    const name = (d.name || '').trim();
+    const school = (d.school || '').trim();
+    if (!name || !school || !email || !password) { state.authError = 'กรุณากรอกข้อมูลให้ครบทุกช่องนะครับ'; goToScreen('auth'); return; }
+    if (password.length < 6) { state.authError = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; goToScreen('auth'); return; }
+    if (password !== d.confirmPassword) { state.authError = 'รหัสผ่านทั้งสองช่องไม่ตรงกันนะครับ'; goToScreen('auth'); return; }
+    state.authBusy = true;
+    goToScreen('auth');
+    authRegister(email, password, name, school).then(function () {
+      state.authBusy = false;
+      state.authMode = 'login';
+      state.authDraft = { name:'', school:'', email: email, password:'', confirmPassword:'' };
+      state.authNotice = '✅ ลงทะเบียนสำเร็จ! กรุณารอผู้ดูแลระบบอนุมัติบัญชี แล้วกลับมาเข้าสู่ระบบอีกครั้ง';
+      goToScreen('auth');
+    }).catch(function (err) {
+      state.authBusy = false;
+      state.authError = translateAuthError(err);
+      goToScreen('auth');
+    });
+  } else {
+    if (!email || !password) { state.authError = 'กรุณากรอกอีเมลและรหัสผ่านนะครับ'; goToScreen('auth'); return; }
+    state.authBusy = true;
+    goToScreen('auth');
+    authLogin(email, password).then(function () {
+      state.authBusy = false;
+      state.authDraft = { name:'', school:'', email:'', password:'', confirmPassword:'' };
+      state.authNotice = '';
+      goToScreen('profile');
+    }).catch(function (err) {
+      state.authBusy = false;
+      if (err && err.pending) {
+        state.authNotice = '⏳ บัญชีของคุณกำลังรอการอนุมัติจากผู้ดูแลระบบ กรุณาลองเข้าสู่ระบบใหม่ภายหลัง';
+        state.authError = '';
+      } else {
+        state.authError = translateAuthError(err);
+      }
+      goToScreen('auth');
+    });
+  }
+}
+
 /* ===================== SECTION 12: SCREEN — PROFILE ===================== */
 function onDraftInput(field, value){ state.draftProfile[field] = value; }
 
@@ -989,6 +1207,7 @@ function buildProfileScreenHtml(){
   return '' +
     '<div data-testid="screen-profile" class="stack">' +
       '<div class="title-row"><button class="teacher-trigger" id="teacher-trigger" data-testid="teacher-trigger" aria-label="เกาะสระวิเศษ">🦜</button><div><div class="app-title">เกาะสระวิเศษ</div><div class="subtitle">เลือกผู้เล่น</div></div></div>' +
+      (state.teacherSession ? '<div class="subtitle center" data-testid="teacher-session-info">👩‍🏫 ' + escapeHtml(state.teacherSession.name) + ' · ' + escapeHtml(state.teacherSession.school) + ' — <button class="auth-switch" id="btn-teacher-logout" data-testid="btn-teacher-logout" style="padding:0">ออกจากระบบ</button></div>' : '') +
       '<div class="pdpa-banner">🔒 ข้อมูลอยู่ในเครื่องนี้เท่านั้น กรุณาส่งออก CSV ทุกครั้งหลังใช้งาน</div>' +
       '<div class="storage-warning sr-only" data-testid="storage-warning-banner">⚠️ ไม่สามารถบันทึกข้อมูลได้ในเบราว์เซอร์นี้ (เช่น โหมดส่วนตัว) เกมยังเล่นได้ปกติ แต่ผลจะหายเมื่อปิดหน้าเว็บ</div>' +
       '<div class="stack" data-testid="profile-list">' + listHtml + '</div>' +
@@ -1027,6 +1246,14 @@ function attachProfileScreenHandlers(){
 
   const groupModeBtn = document.getElementById('btn-group-mode');
   if (groupModeBtn) groupModeBtn.addEventListener('click', startGroupWizard);
+
+  const logoutBtn = document.getElementById('btn-teacher-logout');
+  if (logoutBtn) logoutBtn.addEventListener('click', function () {
+    clearTeacherSession();
+    state.teacherSession = null;
+    state.authMode = 'login';
+    goToScreen('auth');
+  });
 
   const teacherTrigger = document.getElementById('teacher-trigger');
   if (teacherTrigger) {
@@ -1472,6 +1699,11 @@ window.__TEST_API__ = {
       storageAvailable: state.storageAvailable,
       group: state.group,
       traceIndex: state.traceIndex,
+      teacherSession: state.teacherSession,
+      authMode: state.authMode,
+      authError: state.authError,
+      authNotice: state.authNotice,
+      authBusy: state.authBusy,
     }));
   },
   getProfiles: function () { return JSON.parse(JSON.stringify(state.profiles)); },
@@ -2983,7 +3215,13 @@ function initApp(){
   state.groupSessions = loadGroupSessions();
   initSpeech();
   document.addEventListener('pointerdown', unlockAudioOnce, { once: true });
-  goToScreen('profile');
+  const session = loadTeacherSession();
+  if (session && session.uid) {
+    state.teacherSession = session;
+    goToScreen('profile');
+  } else {
+    goToScreen('auth');
+  }
 }
 document.addEventListener('DOMContentLoaded', initApp);
 </script>
