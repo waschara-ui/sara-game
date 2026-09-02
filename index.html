@@ -1137,17 +1137,25 @@ function attachAuthScreenHandlers(){
 
 function onAuthSubmit(){
   if (state.authBusy) return;
-  const d = state.authDraft;
-  const email = (d.email || '').trim();
-  const password = d.password || '';
+  // อ่านค่าจาก DOM โดยตรงเสมอ (ไม่ใช้ state.authDraft) เพราะ renderPreservingInputs คืนค่าฟิลด์เดิม
+  // ที่ id ตรงกัน (เช่น auth-email, auth-password) เข้า DOM หลัง re-render โดยไม่ยิง 'input' event
+  // ถ้าอ่านจาก state.authDraft แทน ค่าที่เห็นในช่องกรอกกับค่าที่ใช้ตรวจสอบจะไม่ตรงกัน (บั๊กค่าพิมพ์หายแบบแฝง)
+  const emailEl = document.getElementById('auth-email');
+  const passwordEl = document.getElementById('auth-password');
+  const email = (emailEl ? emailEl.value : '').trim();
+  const password = passwordEl ? passwordEl.value : '';
   state.authError = '';
 
   if (state.authMode === 'register') {
-    const name = (d.name || '').trim();
-    const school = (d.school || '').trim();
+    const nameEl = document.getElementById('auth-name');
+    const schoolEl = document.getElementById('auth-school');
+    const password2El = document.getElementById('auth-password2');
+    const name = (nameEl ? nameEl.value : '').trim();
+    const school = (schoolEl ? schoolEl.value : '').trim();
+    const confirmPassword = password2El ? password2El.value : '';
     if (!name || !school || !email || !password) { state.authError = 'กรุณากรอกข้อมูลให้ครบทุกช่องนะครับ'; goToScreen('auth'); return; }
     if (password.length < 6) { state.authError = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; goToScreen('auth'); return; }
-    if (password !== d.confirmPassword) { state.authError = 'รหัสผ่านทั้งสองช่องไม่ตรงกันนะครับ'; goToScreen('auth'); return; }
+    if (password !== confirmPassword) { state.authError = 'รหัสผ่านทั้งสองช่องไม่ตรงกันนะครับ'; goToScreen('auth'); return; }
     state.authBusy = true;
     goToScreen('auth');
     authRegister(email, password, name, school).then(function () {
